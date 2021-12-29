@@ -1,13 +1,14 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# zav
+# Zoning for Autonomous Vehicles
 
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of zav is to show the implementation of the simulation
-experiment for the project.
+The goal of zav (Zoning for Autonomous Vehicles) is to show the
+implementation of the problem instance generation and simulation
+experiment conducted for the project.
 
 ## Installation
 
