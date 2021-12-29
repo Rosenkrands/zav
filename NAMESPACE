@@ -2,4 +2,5 @@
 
 export("%>%")
 export(generate_2d_instance)
+export(grid_centroids)
 importFrom(magrittr,"%>%")
