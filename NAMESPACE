@@ -3,4 +3,5 @@
 export("%>%")
 export(generate_2d_instance)
 export(grid_centroids)
+export(plot_point)
 importFrom(magrittr,"%>%")
