@@ -35,5 +35,7 @@ This is a basic example which shows how to generate and solve a problem instance
 
 ```{r example}
 library(zav)
-## basic example code
+
+instance <- generate_2d_instance()
+plot_point(instance = instance) 
 ```

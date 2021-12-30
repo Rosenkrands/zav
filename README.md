@@ -27,5 +27,9 @@ instance:
 
 ``` r
 library(zav)
-## basic example code
+
+instance <- generate_2d_instance()
+plot_point(instance = instance) 
 ```
+
+<img src="man/figures/README-example-1.png" width="100%" />
