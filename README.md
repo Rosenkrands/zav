@@ -22,14 +22,23 @@ devtools::install_github("Rosenkrands/zav")
 
 ## Example
 
-This is a basic example which shows how to generate and solve a problem
-instance:
+This is a basic example which shows how to generate a problem instance:
 
 ``` r
 library(zav)
 
 instance <- generate_2d_instance()
-plot_point(instance = instance) 
+plot_point(instance = instance)
 ```
 
 <img src="man/figures/README-example-1.png" width="100%" />
+
+Here it is shown how the instance can be solved by the KMeans solution
+approach:
+
+``` r
+solution <- solve_kmeans(instance, no_of_centers = 5)
+plot_bases(instance = instance, solution = solution)
+```
+
+<img src="man/figures/README-solution-1.png" width="100%" />
