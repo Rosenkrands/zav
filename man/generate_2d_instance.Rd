@@ -5,10 +5,10 @@
 \title{Generate a problem instance}
 \usage{
 generate_2d_instance(
-  seed = NULL,
+  seed = 1,
   no_of_points = 50,
   interval = c(min = -10, max = 10),
-  arv = c(min = 0, max = 80)
+  arv = c(min = 1/80, max = 1)
 )
 }
 \arguments{
