@@ -1,13 +1,24 @@
-# rm(list = ls())
-source('2d-instance.R')
-
+#' Simulation for a zoning solution
+#'
+#' @param solution A list returned from one of the solution approaches
+#' @param flight Whether to use hard zoning or soft zoning (free-flight)
+#' @param log Whether or not to log results
+#' @param max_dist The maximum distance a demand point can be of a base to be serviced by that base
+#' @param LOS Length of simulation in seconds
+#' @param warmup fraction of LOS to discard as warmup period
+#'
+#' @return None at the moment
+#' @export
+#'
+#' @examples
+#' # WIP
 simulation <- function(
-  solution, flight = c("zoned", "free"), log = F, max_dist = 1000000
+  solution, flight = c("zoned", "free"), log = F, max_dist = 1000000, LOS = 600, warmup = 0
 ) {
   set.seed(110520)
   # Setting parameters for later use
   nReplications = 1
-  LOS = 14400 # Length of simulation
+  # LOS = 14400 # Length of simulation
 
   nDemands = nrow(solution$instance)
   totaldemandrate = sum(solution$instance$`Arrival rate`)
@@ -21,7 +32,7 @@ simulation <- function(
 
   # Helper functions
   getDemandpointID <- function(df){
-    prob = runif(1)
+    prob = stats::runif(1)
     for (i in 1:length(df)){
       if(prob < df[i]){
         return(i)
@@ -95,14 +106,14 @@ simulation <- function(
   }
 
   df_demandpoints = solution$instance %>%
-    rename(X = x, Y = y)
+    dplyr::rename(X = x, Y = y)
 
   metric_list <- list()
   agentLog_list <- list()
   utilization_list <- list()
 
   for (n in 1:nReplications){
-    # cat(sprintf("Replication = : %s\n", n))
+    cat(sprintf("Replication = : %s\n", n))
     # Initialize an agent list (assume they are at 0,0 at the beginning)
     agentList = data.frame(id = agentBaseInfo$id,
                            Xnow = agentBaseInfo$X,
@@ -113,7 +124,7 @@ simulation <- function(
                            tDeployed = rep(0, nAgents),
                            status  = rep("IDLE", nAgents), stringsAsFactors=FALSE)
 
-    agentLog = agentList %>% mutate(time = -1)
+    agentLog = agentList %>% dplyr::mutate(time = -1)
 
     # Initialize a simulation result
     demandPerformance = data.frame(
@@ -137,16 +148,16 @@ simulation <- function(
       agentid = numeric(),
       demandid = numeric()
     )
-    tNext = round(rexp(1, totaldemandrate)) # Sample next demand arrival time
+    tNext = round(stats::rexp(1, totaldemandrate)) # Sample next demand arrival time
     demand_id = getDemandpointID(df_demandpoints$prob) # assign demand points based on their demand rates
-    eventList <- bind_rows(
+    eventList <- dplyr::bind_rows(
       eventList,
       data.frame(event = c("Call"),
                  time = c(tNext),
                  demandid = c(demand_id))
     ) # put the first event into the eventlist
 
-    eventList <- bind_rows(
+    eventList <- dplyr::bind_rows(
       eventList,
       data.frame(event = c("Move"),
                  time = c(tNext),
@@ -160,11 +171,11 @@ simulation <- function(
       eventNow <- eventList[1,]
       eventList <- eventList[-c(1),]
       tNow = eventNow$time
-      # cat(sprintf("EVENT = : %s\t", eventNow$event), sprintf("Time = : %s\n", tNow))
+      cat(sprintf("EVENT = : %s\t", eventNow$event), sprintf("Time = : %s\n", tNow))
 
       # Exclude the warmup period (i.e. the first hour of the simulation)
       # TODO: Make the warmup period length an argument to the function
-      if ((tNow >= 3600) & (reset == F)) {
+      if ((tNow >= LOS*(1-warmup)) & (reset == F)) {
         demandPerformance = data.frame(
           nGenerated = rep(0, nDemands),
           nCovered = rep(0, nDemands),
@@ -203,9 +214,9 @@ simulation <- function(
                }
 
                # Generate next call
-               tNext = tNow + round(rexp(1, totaldemandrate))
+               tNext = tNow + round(stats::rexp(1, totaldemandrate))
                demand_id = getDemandpointID(df_demandpoints$prob)
-               eventList <- bind_rows(
+               eventList <- dplyr::bind_rows(
                  eventList, data.frame(event = c("Call"),
                                        time = c(tNext),
                                        demandid = c(demand_id))
@@ -235,10 +246,10 @@ simulation <- function(
                      agentList$Xnow[agent_id]  = agentList$goalX[agent_id]
                      agentList$Ynow[agent_id]  = agentList$goalY[agent_id]
                      if (agentList$status[agent_id] == "BUSY"){ # arrived at the demand point
-                       # cat(sprintf("Agent %s\t", agent_id), sprintf(" arrived at demand point %s ", agentList$demand_id_handling[agent_id]), sprintf("at time %s\n", tNow))
+                       cat(sprintf("Agent %s\t", agent_id), sprintf(" arrived at demand point %s ", agentList$demand_id_handling[agent_id]), sprintf("at time %s\n", tNow))
                        # Record demand performance
                        demandPerformance$totalResponseTime[agentList$demand_id_handling[agent_id]] <-  demandPerformance$totalResponseTime[agentList$demand_id_handling[agent_id]] + (tNow-agentList$tDeployed[agent_id])
-                       responseTimePerformance <- bind_rows(
+                       responseTimePerformance <- dplyr::bind_rows(
                          responseTimePerformance,
                          data.frame(demand_id_handling = agentList$demand_id_handling[agent_id],
                                     responseTime = tNow-agentList$tDeployed[agent_id])
@@ -251,7 +262,7 @@ simulation <- function(
                        agentList$goalY[agent_id] = agentBaseInfo$Y[agent_id]
                      }
                      else { # Agent returned to its base
-                       # cat(sprintf("Agent %s\t", agent_id), sprintf(" returns its home base at time %s\n", tNow))
+                       cat(sprintf("Agent %s\t", agent_id), sprintf(" returns its home base at time %s\n", tNow))
                        # update agent usage data
                        agentPerformance$totalUsage[agent_id] <- agentPerformance$totalUsage[agent_id]  + (tNow - agentList$tDeployed[agent_id])
                        # update agent status
@@ -262,15 +273,15 @@ simulation <- function(
                  }
                }
                # Generate next "Move" event
-               eventList <- bind_rows(
+               eventList <- dplyr::bind_rows(
                  eventList,
                  data.frame(event = c("Move"),
                             time = c(tNow+1),
                             demandid = c(0))
                )
-               agentLog <- bind_rows(
+               agentLog <- dplyr::bind_rows(
                  agentLog,
-                 agentList %>% mutate(time = tNow)
+                 agentList %>% dplyr::mutate(time = tNow)
                )
              },
              {
@@ -283,89 +294,89 @@ simulation <- function(
 
     #TODO: Tidy up the rest of this mess
 
-    first_demand <- agentLog %>%
-      select(time) %>%
-      filter(time != -1) %>% unique() %>%
-      filter(time == min(time)) %>% as.numeric()
-
-    first_row <- agentLog %>% filter(time == -1)
-    missing <- first_row[0,]
-    for (i in 1:first_demand) {
-      missing <- bind_rows(missing, first_row %>% mutate(time = i - 1))
-    }
-
-    agentLog <- bind_rows(
-      agentLog %>% filter(time == -1),
-      missing,
-      agentLog %>% filter(time >= first_demand)
-    )
-
-    # Calculate distance between agents at any given time
-    locations <- agentLog %>%
-      select(id, x = Xnow, y = Ynow, time) %>%
-      mutate(idt = paste0(time,'_',id))
-
-    combinations <- combn(unique(locations$id), 2) %>% t()
-
-    dist_calc = function(points, t) {
-      locations_temp <- locations %>% filter(time == t)
-      # print(locations_temp)
-      euclid_norm(
-        c(
-          locations_temp$x[points[1]] - locations_temp$x[points[2]],
-          locations_temp$y[points[1]] - locations_temp$y[points[2]]
-        )
-      )
-    }
-
-    # distances1 <- tibble(id1 = rep(combinations[,1],length(unique(locations$time))),
-    #                     id2 = rep(combinations[,2],length(unique(locations$time))),
-    #                     time = sort(rep(seq(-1, length(unique(locations$time)) - 2), length(combinations[,1])))) %>%
-    #   rowwise() %>%
-    #   mutate(distance = dist_calc(points = c(id1, id2), t = time))
-
-    distances2 <- tibble(id1 = rep(combinations[,1],length(unique(locations$time))),
-                         id2 = rep(combinations[,2],length(unique(locations$time))),
-                         time = sort(rep(seq(-1, length(unique(locations$time)) - 2), length(combinations[,1])))) %>%
-      mutate(idt1 = paste0(time, '_',id1), idt2 = paste0(time, '_',id2)) %>%
-      inner_join(locations %>% select(idt,x,y), by=c("idt1" = "idt")) %>%
-      inner_join(locations %>% select(idt,x,y), by=c("idt2" = "idt"), suffix = c(".1",".2")) %>%
-      select(-c(idt1, idt2))
-
-    distances2 <- distances2 %>% mutate(
-      distance = distanceFunctions::simDistC(
-        distances2 %>% select(x.1, y.1, x.2, y.2) %>% data.matrix()
-      )
-    ) %>% group_by(time) %>% summarise(distance = min(distance))
-
-    distanceSummary <- distances2 %>%
-      summarise(mean = mean(distance),
-                median = median(distance),
-                min = min(distance),
-                max = max(distance),
-                `1th percentile` = quantile(distance, probs = c(.01)),
-                `5th percentile` = quantile(distance, probs = c(.05)),
-                `10th percentile` = quantile(distance, probs = c(.1))) %>%
-      pivot_longer(cols = everything())
-
-    metric_list[[n]] <- list("demandPerformance" = demandPerformance,
-                             "agentPerformance" = agentPerformance,
-                             "responseTimePerformance" = responseTimePerformance,
-                             "distanceSummary" = distanceSummary
-    )
-
-    agentLog_list[[n]] <- agentLog
-    utilization_list[[n]] <- agentLog %>%
-      select(id, status, time) %>%
-      mutate(inUse = ifelse(status != "IDLE", 1, 0)) %>%
-      group_by(time) %>%
-      summarise(inUse = mean(inUse)) %>%
-      mutate(inUse = cumsum(inUse))
+    # first_demand <- agentLog %>%
+    #   select(time) %>%
+    #   filter(time != -1) %>% unique() %>%
+    #   filter(time == min(time)) %>% as.numeric()
+    #
+    # first_row <- agentLog %>% filter(time == -1)
+    # missing <- first_row[0,]
+    # for (i in 1:first_demand) {
+    #   missing <- bind_rows(missing, first_row %>% mutate(time = i - 1))
+    # }
+    #
+    # agentLog <- bind_rows(
+    #   agentLog %>% filter(time == -1),
+    #   missing,
+    #   agentLog %>% filter(time >= first_demand)
+    # )
+    #
+    # # Calculate distance between agents at any given time
+    # locations <- agentLog %>%
+    #   select(id, x = Xnow, y = Ynow, time) %>%
+    #   mutate(idt = paste0(time,'_',id))
+    #
+    # combinations <- combn(unique(locations$id), 2) %>% t()
+    #
+    # dist_calc = function(points, t) {
+    #   locations_temp <- locations %>% filter(time == t)
+    #   # print(locations_temp)
+    #   euclid_norm(
+    #     c(
+    #       locations_temp$x[points[1]] - locations_temp$x[points[2]],
+    #       locations_temp$y[points[1]] - locations_temp$y[points[2]]
+    #     )
+    #   )
+    # }
+    #
+    # # distances1 <- tibble(id1 = rep(combinations[,1],length(unique(locations$time))),
+    # #                     id2 = rep(combinations[,2],length(unique(locations$time))),
+    # #                     time = sort(rep(seq(-1, length(unique(locations$time)) - 2), length(combinations[,1])))) %>%
+    # #   rowwise() %>%
+    # #   mutate(distance = dist_calc(points = c(id1, id2), t = time))
+    #
+    # distances2 <- tibble(id1 = rep(combinations[,1],length(unique(locations$time))),
+    #                      id2 = rep(combinations[,2],length(unique(locations$time))),
+    #                      time = sort(rep(seq(-1, length(unique(locations$time)) - 2), length(combinations[,1])))) %>%
+    #   mutate(idt1 = paste0(time, '_',id1), idt2 = paste0(time, '_',id2)) %>%
+    #   inner_join(locations %>% select(idt,x,y), by=c("idt1" = "idt")) %>%
+    #   inner_join(locations %>% select(idt,x,y), by=c("idt2" = "idt"), suffix = c(".1",".2")) %>%
+    #   select(-c(idt1, idt2))
+    #
+    # distances2 <- distances2 %>% mutate(
+    #   distance = distanceFunctions::simDistC(
+    #     distances2 %>% select(x.1, y.1, x.2, y.2) %>% data.matrix()
+    #   )
+    # ) %>% group_by(time) %>% summarise(distance = min(distance))
+    #
+    # distanceSummary <- distances2 %>%
+    #   summarise(mean = mean(distance),
+    #             median = median(distance),
+    #             min = min(distance),
+    #             max = max(distance),
+    #             `1th percentile` = quantile(distance, probs = c(.01)),
+    #             `5th percentile` = quantile(distance, probs = c(.05)),
+    #             `10th percentile` = quantile(distance, probs = c(.1))) %>%
+    #   pivot_longer(cols = everything())
+    #
+    # metric_list[[n]] <- list("demandPerformance" = demandPerformance,
+    #                          "agentPerformance" = agentPerformance,
+    #                          "responseTimePerformance" = responseTimePerformance,
+    #                          "distanceSummary" = distanceSummary
+    # )
+    #
+    # agentLog_list[[n]] <- agentLog
+    # utilization_list[[n]] <- agentLog %>%
+    #   select(id, status, time) %>%
+    #   mutate(inUse = ifelse(status != "IDLE", 1, 0)) %>%
+    #   group_by(time) %>%
+    #   summarise(inUse = mean(inUse)) %>%
+    #   mutate(inUse = cumsum(inUse))
   }
-  set.seed(NULL)
-  if (log == T) {
-    return(list("metrics" = metric_list, "log" = agentLog_list))
-  } else {
-    return(list("metrics" = metric_list, "utilization" = utilization_list))
-  }
+  # set.seed(NULL)
+  # if (log == T) {
+  #   return(list("metrics" = metric_list, "log" = agentLog_list))
+  # } else {
+  #   return(list("metrics" = metric_list, "utilization" = utilization_list))
+  # }
 }
