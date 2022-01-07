@@ -35,15 +35,16 @@ This is a basic example which shows how to generate  a problem instance:
 
 ```{r example, fig.dim=c(4,4), out.width="50%", fig.align='center'}
 library(zav)
+library(ggplot2)
 
-instance <- generate_2d_instance(no_of_points = 10)
+instance <- generate_2d_instance(no_of_points = 50)
 plot_point(instance = instance)
 ```
 
 Here it is shown how the instance can be solved by the KMeans solution approach:
 
 ```{r solution, fig.dim=c(4,4), out.width="50%", fig.align='center'}
-solution <- solve_kmeans(instance, no_of_centers = 2)
+solution <- solve_kmeans(instance, no_of_centers = 5)
 plot_bases(instance = instance, solution = solution)
 ```
 
@@ -52,13 +53,24 @@ Here it is shown how you can make a simulation based on the solution just found:
 ```{r}
 simulation_result <- simulation(
   solution = solution,
+  seed = 1,
+  n_replications = 1,
   flight = "zoned",
-  log = T,
   max_dist = 1000000,
   LOS = 200,
   warmup = 0,
   speed_agent = .25,
   verbose = F
 )
+```
+
+```{r}
+simulation_result$metrics[[1]]$distances %>%
+  ggplot(aes(x = time, 
+             y = distance,
+             color = paste0(id1,'-',id2))) +
+  geom_line() +
+  labs(color = "Pair") +
+  theme_bw()
 ```
 

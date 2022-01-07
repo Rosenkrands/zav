@@ -9,7 +9,6 @@ simulation(
   seed = 1,
   n_replications = 1,
   flight = c("zoned", "free"),
-  log = F,
   max_dist = 1e+06,
   LOS = 600,
   warmup = 0,
@@ -25,8 +24,6 @@ simulation(
 \item{n_replications}{Number of times to repeat the simulation}
 
 \item{flight}{Whether to use hard zoning or soft zoning (free-flight)}
-
-\item{log}{Whether or not to log results}
 
 \item{max_dist}{The maximum distance a demand point can be of a base to be serviced by that base}
 

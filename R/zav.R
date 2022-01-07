@@ -1,3 +1,3 @@
-#' @useDynLib sparklyr
+#' @useDynLib zav
 #' @importFrom Rcpp sourceCpp
 NULL

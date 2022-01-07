@@ -4,7 +4,6 @@
 #' @param seed Passed to the set.seed function for reproducibility of results
 #' @param n_replications Number of times to repeat the simulation
 #' @param flight Whether to use hard zoning or soft zoning (free-flight)
-#' @param log Whether or not to log results
 #' @param max_dist The maximum distance a demand point can be of a base to be serviced by that base
 #' @param LOS Length of simulation in seconds
 #' @param warmup Fraction of LOS to discard as warmup period
@@ -21,7 +20,6 @@ simulation <- function(
   seed = 1,
   n_replications = 1,
   flight = c("zoned", "free"),
-  log = F,
   max_dist = 1000000,
   LOS = 600,
   warmup = 0,
@@ -122,7 +120,7 @@ simulation <- function(
     dplyr::rename(X = x, Y = y)
 
   metric_list <- list()
-  agent_log_list <- list()
+  # agent_log_list <- list()
   utilization_list <- list()
 
   for (n in 1:n_replications){
@@ -330,38 +328,28 @@ simulation <- function(
       dplyr::select(id, x = x_now, y = y_now, time) %>%
       dplyr::mutate(idt = paste0(time,'_',id))
 
+    # Get all combinations of agents
     combinations <- utils::combn(unique(locations$id), 2) %>% t()
 
-    # dist_calc = function(points, t) {
-    #   locations_temp <- locations %>% dplyr::filter(time == t)
-    #   euclid_norm(
-    #     c(
-    #       locations_temp$x[points[1]] - locations_temp$x[points[2]],
-    #       locations_temp$y[points[1]] - locations_temp$y[points[2]]
-    #     )
-    #   )
-    # }
-    #
-    # distances1 <- tibble::tibble(id1 = rep(combinations[,1],length(unique(locations$time))),
-    #                     id2 = rep(combinations[,2],length(unique(locations$time))),
-    #                     time = sort(rep(seq(0, length(unique(locations$time)) - 1), length(combinations[,1])))) %>%
-    #   dplyr::rowwise() %>%
-    #   dplyr::mutate(distance = dist_calc(points = c(id1, id2), t = time))
-    #
-    distances <- tibble::tibble(id1 = rep(combinations[,1],length(unique(locations$time))),
-                         id2 = rep(combinations[,2],length(unique(locations$time))),
-                         time = sort(rep(seq(0, length(unique(locations$time)) - 1), length(combinations[,1])))) %>%
+
+    distances <- tibble::tibble( # Repeating possible combinations for each unit of time
+      id1 = rep(combinations[,1],length(unique(locations$time))),
+      id2 = rep(combinations[,2],length(unique(locations$time))),
+      time = sort(rep(seq(0, length(unique(locations$time)) - 1), length(combinations[,1])))
+    ) %>%
+      # Generating composite key on agent id and time to join position from locations
       dplyr::mutate(idt1 = paste0(time, '_',id1), idt2 = paste0(time, '_',id2)) %>%
       dplyr::inner_join(locations %>% dplyr::select(idt,x,y), by=c("idt1" = "idt")) %>%
       dplyr::inner_join(locations %>% dplyr::select(idt,x,y), by=c("idt2" = "idt"), suffix = c(".1",".2")) %>%
       dplyr::select(-c(idt1, idt2))
 
+    # distance between all agent pairs at all times
     distances <- distances %>% dplyr::mutate(
       distance = sim_dist(
         distances %>% dplyr::select(x.1, y.1, x.2, y.2) %>% data.matrix()
       )
-    ) %>% dplyr::group_by(time) %>% dplyr::summarise(distance = min(distance))
-    #
+    ) # %>% dplyr::group_by(time) %>% dplyr::summarise(distance = min(distance))
+
     # distanceSummary <- distances2 %>%
     #   summarise(mean = mean(distance),
     #             median = median(distance),
@@ -372,13 +360,18 @@ simulation <- function(
     #             `10th percentile` = quantile(distance, probs = c(.1))) %>%
     #   pivot_longer(cols = everything())
     #
-    # metric_list[[n]] <- list("demand_performance" = demand_performance,
-    #                          "agent_performance" = agent_performance,
-    #                          "response_time_performance" = response_time_performance,
-    #                          "distanceSummary" = distanceSummary
-    # )
-    #
+
+    # Prepare a list to export metrics for each replication
+    metric_list[[n]] <- list("demand_performance" = demand_performance,
+                             "agent_performance" = agent_performance,
+                             "response_time_performance" = response_time_performance,
+                             "distances" = distances,
+                             "agent_log" = agent_log
+    )
+
+    # The agent log is stored seperately
     # agent_log_list[[n]] <- agent_log
+
     # utilization_list[[n]] <- agent_log %>%
     #   select(id, status, time) %>%
     #   mutate(inUse = ifelse(status != "IDLE", 1, 0)) %>%
@@ -386,10 +379,5 @@ simulation <- function(
     #   summarise(inUse = mean(inUse)) %>%
     #   mutate(inUse = cumsum(inUse))
   }
-  # set.seed(NULL)
-  # if (log == T) {
-  #   return(list("metrics" = metric_list, "log" = agent_log_list))
-  # } else {
-  #   return(list("metrics" = metric_list, "utilization" = utilization_list))
-  # }
+  return(list("metrics" = metric_list))
 }
