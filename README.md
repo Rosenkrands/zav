@@ -22,7 +22,7 @@ devtools::install_github("Rosenkrands/zav")
 
 ## Example
 
-This is a basic example which shows how to generate a problem instance: 
+This is a basic example which shows how to generate a problem instance:
 
 ``` r
 library(zav)
@@ -31,7 +31,7 @@ instance <- generate_2d_instance()
 plot_point(instance = instance)
 ```
 
-<img src="man/figures/README-example-1.png" width="100%" />
+<img src="man/figures/README-example-1.png" width="50%" />
 
 Here it is shown how the instance can be solved by the KMeans solution
 approach:

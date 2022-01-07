@@ -33,7 +33,7 @@ devtools::install_github("Rosenkrands/zav")
 
 This is a basic example which shows how to generate  a problem instance:
 
-```{r example, fig.dim=c(4,4)}
+```{r example, fig.dim=c(4,4), out.width="50%"}
 library(zav)
 
 instance <- generate_2d_instance()
