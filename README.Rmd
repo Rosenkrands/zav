@@ -64,7 +64,7 @@ simulation_result <- simulation(
 )
 ```
 
-```{r}
+```{r out.width="50%", dpi=300}
 simulation_result$metrics[[1]]$distances %>%
   ggplot(aes(x = time, 
              y = distance,
