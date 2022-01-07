@@ -46,7 +46,8 @@ Here it is shown how the instance can be solved by the KMeans solution approach:
 
 ```{r solution}
 solution <- solve_kmeans(instance, no_of_centers = 5)
-plot_bases(instance = instance, solution = solution)
+plot_bases(instance = instance, solution = solution) +
+  theme(legend.position = "none")
 ```
 
 Here it is shown how you can make a simulation based on the solution just found:
@@ -67,7 +68,7 @@ simulation_result <- simulation(
 ```
 
 ```{r}
-simulation_result$metrics[[1]]$response_time_performance
+# simulation_result$metrics[[1]]$response_time_performance
 ```
 
 
@@ -78,6 +79,7 @@ simulation_result$metrics[[1]]$distances %>%
              color = paste0(id1,'-',id2))) +
   geom_line() +
   labs(color = "Pair") +
-  theme_bw()
+  theme_bw() +
+  theme(legend.position = "none")
 ```
 
