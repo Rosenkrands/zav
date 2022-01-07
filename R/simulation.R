@@ -114,6 +114,50 @@ simulation <- function(
         return(0)
       }
     }
+
+    ### Precalculate the service area for each agent ###
+    agent_dist <- function(id=c("p_id"=-1,"a_id"=-1)){
+      distance <- euclid_norm(
+        c(
+          dplyr::pull(
+            solution$instance[id[1,"p_id"], "x"] - centroid_locations[id[1,"a_id"], "x"]
+          ),
+          dplyr::pull(
+            solution$instance[id[1,"p_id"], "y"] - centroid_locations[id[1,"a_id"], "y"]
+          )
+        )
+      )
+      return(
+        tibble::tibble(
+          `Demand point id` = id[1,"p_id"],
+          `Centroid id` = id[1,"a_id"],
+          `Distance` = distance
+        )
+      )
+    }
+
+    centroid_locations <- solution$instance %>%
+      dplyr::select(`Centroid id`, x = x.centroid, y = y.centroid) %>%
+      dplyr::distinct() %>%
+      dplyr::arrange(`Centroid id`)
+
+    # Find all possible combinations of demand points and centroids
+    arg_df <- expand.grid(
+      solution$instance$`Demand point id`,
+      centroid_locations$`Centroid id`
+    ) %>%
+      dplyr::rename(p_id = Var1, a_id = Var2) %>%
+      dplyr::mutate(p_id = as.character(p_id), a_id = as.character(a_id))
+
+    # Convert dataframe to list
+    arg_list <- split(arg_df,1:nrow(arg_df))
+
+    # Calculate distances
+    result_list <- lapply(arg_list,agent_dist)
+    dist_temp <- do.call(dplyr::bind_rows,result_list)
+
+    # Filter to determine service area per `Centroid id`
+    service_area <- dist_temp %>% dplyr::filter(Distance < max_dist)
   }
 
   df_demandpoints = solution$instance %>%
