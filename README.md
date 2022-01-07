@@ -22,7 +22,7 @@ devtools::install_github("Rosenkrands/zav")
 
 ## Example
 
-This is a basic example which shows how to generate a problem instance: 
+This is a basic example which shows how to generate a problem instance:
 
 ``` r
 library(zav)
