@@ -20,9 +20,10 @@ You can install the development version of zav from
 devtools::install_github("Rosenkrands/zav")
 ```
 
-## Example
+## Instance generation
 
-This is a basic example which shows how to generate a problem instance:
+To generate a problem instance we can utilize the `generate_2d_instance`
+function.
 
 ``` r
 library(zav)
@@ -34,8 +35,12 @@ plot_point(instance = instance)
 
 <img src="man/figures/README-example-1.png" width="75%" />
 
-Here it is shown how the instance can be solved by the KMeans solution
-approach:
+## Zoning solutions
+
+### KMeans
+
+The below code chunk shows how we can utilize the `solve_kmeans`
+function to generate a solution for our problem instance.
 
 ``` r
 solution <- solve_kmeans(instance, no_of_centers = 5)
@@ -45,11 +50,14 @@ plot_bases(instance = instance, solution = solution) +
 
 <img src="man/figures/README-solution-1.png" width="75%" />
 
+## Simulation
+
 Here it is shown how you can make a simulation based on the solution
 just found:
 
 ``` r
-# solution = solution; seed = 1;n_replications = 1;flight = "zoned";max_dist = 1000000;LOS = 600;warmup = 0;speed_agent = .25;verbose = F
+#' The below line is for testing purposes
+#' solution = solution; seed = 1;n_replications = 1;flight = "zoned";max_dist = 1000000;LOS = 600;warmup = 0;speed_agent = .25;verbose = F
 simulation_result <- simulation(
   solution = solution,
   seed = 1,
