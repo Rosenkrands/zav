@@ -32,7 +32,7 @@ instance <- generate_2d_instance(no_of_points = 50)
 plot_point(instance = instance)
 ```
 
-<img src="man/figures/README-example-1.png" width="50%" style="display: block; margin: auto;" />
+<img src="man/figures/README-example-1.png" width="75%" />
 
 Here it is shown how the instance can be solved by the KMeans solution
 approach:
@@ -42,7 +42,7 @@ solution <- solve_kmeans(instance, no_of_centers = 5)
 plot_bases(instance = instance, solution = solution)
 ```
 
-<img src="man/figures/README-solution-1.png" width="50%" style="display: block; margin: auto;" />
+<img src="man/figures/README-solution-1.png" width="75%" />
 
 Here it is shown how you can make a simulation based on the solution
 just found:
@@ -71,4 +71,4 @@ simulation_result$metrics[[1]]$distances %>%
   theme_bw()
 ```
 
-<img src="man/figures/README-unnamed-chunk-3-1.png" width="50%" />
+<img src="man/figures/README-distances-1.png" width="75%" />
