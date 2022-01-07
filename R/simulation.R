@@ -9,6 +9,7 @@
 #' @param LOS Length of simulation in seconds
 #' @param warmup Fraction of LOS to discard as warmup period
 #' @param speed_agent Movement per time unit for an agent
+#' @param verbose Whether or not to print the information on the simulation
 #'
 #' @return None at the moment
 #' @export
@@ -305,11 +306,13 @@ simulation <- function(
     t_first_demand <- agent_log$time[agent_log$time != -1][1]
 
     # Generate missing rows in the agent log until first demand arrival
+
     missing <- agent_log[agent_log$time == -1,]
     for (i in 1:t_first_demand) {
       missing <- dplyr::bind_rows(
         missing,
-        first_row %>% dplyr::mutate(time = i - 1)
+        agent_log[agent_log$time == -1, ] %>%
+          dplyr::mutate(time = i - 1)
       )
     }
     missing <- missing[missing$time != -1, ]
@@ -327,37 +330,37 @@ simulation <- function(
       dplyr::select(id, x = x_now, y = y_now, time) %>%
       dplyr::mutate(idt = paste0(time,'_',id))
 
-    combinations <- combn(unique(locations$id), 2) %>% t()
+    combinations <- utils::combn(unique(locations$id), 2) %>% t()
 
-    dist_calc = function(points, t) {
-      locations_temp <- locations %>% dplyr::filter(time == t)
-      euclid_norm(
-        c(
-          locations_temp$x[points[1]] - locations_temp$x[points[2]],
-          locations_temp$y[points[1]] - locations_temp$y[points[2]]
-        )
-      )
-    }
-
-    distances1 <- tibble::tibble(id1 = rep(combinations[,1],length(unique(locations$time))),
-                        id2 = rep(combinations[,2],length(unique(locations$time))),
-                        time = sort(rep(seq(0, length(unique(locations$time)) - 1), length(combinations[,1])))) %>%
-      dplyr::rowwise() %>%
-      dplyr::mutate(distance = dist_calc(points = c(id1, id2), t = time))
-    #
-    # distances2 <- tibble(id1 = rep(combinations[,1],length(unique(locations$time))),
-    #                      id2 = rep(combinations[,2],length(unique(locations$time))),
-    #                      time = sort(rep(seq(-1, length(unique(locations$time)) - 2), length(combinations[,1])))) %>%
-    #   mutate(idt1 = paste0(time, '_',id1), idt2 = paste0(time, '_',id2)) %>%
-    #   inner_join(locations %>% select(idt,x,y), by=c("idt1" = "idt")) %>%
-    #   inner_join(locations %>% select(idt,x,y), by=c("idt2" = "idt"), suffix = c(".1",".2")) %>%
-    #   select(-c(idt1, idt2))
-    #
-    # distances2 <- distances2 %>% mutate(
-    #   distance = distanceFunctions::simDistC(
-    #     distances2 %>% select(x.1, y.1, x.2, y.2) %>% data.matrix()
+    # dist_calc = function(points, t) {
+    #   locations_temp <- locations %>% dplyr::filter(time == t)
+    #   euclid_norm(
+    #     c(
+    #       locations_temp$x[points[1]] - locations_temp$x[points[2]],
+    #       locations_temp$y[points[1]] - locations_temp$y[points[2]]
+    #     )
     #   )
-    # ) %>% group_by(time) %>% summarise(distance = min(distance))
+    # }
+    #
+    # distances1 <- tibble::tibble(id1 = rep(combinations[,1],length(unique(locations$time))),
+    #                     id2 = rep(combinations[,2],length(unique(locations$time))),
+    #                     time = sort(rep(seq(0, length(unique(locations$time)) - 1), length(combinations[,1])))) %>%
+    #   dplyr::rowwise() %>%
+    #   dplyr::mutate(distance = dist_calc(points = c(id1, id2), t = time))
+    #
+    distances <- tibble::tibble(id1 = rep(combinations[,1],length(unique(locations$time))),
+                         id2 = rep(combinations[,2],length(unique(locations$time))),
+                         time = sort(rep(seq(0, length(unique(locations$time)) - 1), length(combinations[,1])))) %>%
+      dplyr::mutate(idt1 = paste0(time, '_',id1), idt2 = paste0(time, '_',id2)) %>%
+      dplyr::inner_join(locations %>% dplyr::select(idt,x,y), by=c("idt1" = "idt")) %>%
+      dplyr::inner_join(locations %>% dplyr::select(idt,x,y), by=c("idt2" = "idt"), suffix = c(".1",".2")) %>%
+      dplyr::select(-c(idt1, idt2))
+
+    distances <- distances %>% dplyr::mutate(
+      distance = sim_dist(
+        distances %>% dplyr::select(x.1, y.1, x.2, y.2) %>% data.matrix()
+      )
+    ) %>% dplyr::group_by(time) %>% dplyr::summarise(distance = min(distance))
     #
     # distanceSummary <- distances2 %>%
     #   summarise(mean = mean(distance),

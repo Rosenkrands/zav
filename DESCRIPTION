@@ -14,7 +14,10 @@ Imports:
     flexclust,
     ggplot2,
     magrittr,
+    Rcpp,
     stats,
     tibble
 URL: https://github.com/Rosenkrands/zav
 BugReports: https://github.com/Rosenkrands/zav/issues
+LinkingTo: 
+    Rcpp

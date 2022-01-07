@@ -6,15 +6,23 @@
 \usage{
 simulation(
   solution,
+  seed = 1,
+  n_replications = 1,
   flight = c("zoned", "free"),
   log = F,
   max_dist = 1e+06,
   LOS = 600,
-  warmup = 0
+  warmup = 0,
+  speed_agent = 0.25,
+  verbose = F
 )
 }
 \arguments{
 \item{solution}{A list returned from one of the solution approaches}
+
+\item{seed}{Passed to the set.seed function for reproducibility of results}
+
+\item{n_replications}{Number of times to repeat the simulation}
 
 \item{flight}{Whether to use hard zoning or soft zoning (free-flight)}
 
@@ -24,7 +32,11 @@ simulation(
 
 \item{LOS}{Length of simulation in seconds}
 
-\item{warmup}{fraction of LOS to discard as warmup period}
+\item{warmup}{Fraction of LOS to discard as warmup period}
+
+\item{speed_agent}{Movement per time unit for an agent}
+
+\item{verbose}{Whether or not to print the information on the simulation}
 }
 \value{
 None at the moment
