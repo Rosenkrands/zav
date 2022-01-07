@@ -33,7 +33,7 @@ devtools::install_github("Rosenkrands/zav")
 
 This is a basic example which shows how to generate  a problem instance:
 
-```{r example, out.width="50%", fig.align='center'}
+```{r example, fig.dim=c(4,4), out.width="50%", fig.align='center'}
 library(zav)
 
 instance <- generate_2d_instance()
@@ -42,7 +42,7 @@ plot_point(instance = instance)
 
 Here it is shown how the instance can be solved by the KMeans solution approach:
 
-```{r solution, out.width="50%", fig.align='center'}
+```{r solution, fig.dim=c(4,4), out.width="50%", fig.align='center'}
 solution <- solve_kmeans(instance, no_of_centers = 5)
 plot_bases(instance = instance, solution = solution)
 ```
