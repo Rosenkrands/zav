@@ -38,7 +38,7 @@ This is a basic example which shows how to generate  a problem instance:
 library(zav)
 library(ggplot2)
 
-instance <- generate_2d_instance(no_of_points = 50)
+instance <- generate_2d_instance(no_of_points = 100)
 plot_point(instance = instance)
 ```
 
@@ -52,18 +52,24 @@ plot_bases(instance = instance, solution = solution)
 Here it is shown how you can make a simulation based on the solution just found:
 
 ```{r simulation}
+# solution = solution; seed = 1;n_replications = 1;flight = "zoned";max_dist = 1000000;LOS = 600;warmup = 0;speed_agent = .25;verbose = F
 simulation_result <- simulation(
   solution = solution,
   seed = 1,
   n_replications = 1,
   flight = "zoned",
   max_dist = 1000000,
-  LOS = 200,
+  LOS = 600,
   warmup = 0,
   speed_agent = .25,
   verbose = F
 )
 ```
+
+```{r}
+simulation_result$metrics[[1]]$response_time_performance
+```
+
 
 ```{r distances}
 simulation_result$metrics[[1]]$distances %>%

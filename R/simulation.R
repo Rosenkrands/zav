@@ -185,7 +185,7 @@ simulation <- function(
       if (verbose) cat(sprintf("EVENT = : %s\t", event_now$event), sprintf("Time = : %s\n", t_now))
 
       # Exclude the warmup period (i.e. the first hour of the simulation)
-      if ((t_now >= LOS*(1-warmup)) & (reset == F)) {
+      if ((t_now > LOS*(1-warmup)) & (reset == F)) {
         demand_performance = data.frame(
           n_generated = rep(0, n_demands),
           n_covered = rep(0, n_demands),
@@ -215,8 +215,8 @@ simulation <- function(
                  agent_list$goal_y[agent_id] <- df_demandpoints$Y[event_now$demand_id]
                  agent_list$demand_id_handling[agent_id] <- event_now$demand_id
                  agent_list$t_deployed[agent_id] <- t_now
-                 agent_performance$n_dispatched[agent_id] <- agent_performance$n_dispatched[agent_id] +1
-                 demand_performance$n_covered[event_now$demand_id] <-  demand_performance$n_covered[event_now$demand_id] +1
+                 agent_performance$n_dispatched[agent_id] <- agent_performance$n_dispatched[agent_id] + 1
+                 demand_performance$n_covered[event_now$demand_id] <-  demand_performance$n_covered[event_now$demand_id] + 1
                }
                else{
                  # No agent is available.
