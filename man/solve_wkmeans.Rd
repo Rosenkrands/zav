@@ -4,12 +4,14 @@
 \alias{solve_wkmeans}
 \title{Weighted KMeans solution approach}
 \usage{
-solve_wkmeans(instance, no_of_centers = 5)
+solve_wkmeans(instance, no_of_centers = 5, type = c("flexclust", "swkm"))
 }
 \arguments{
 \item{instance}{A list returned from generate_2d_instance}
 
 \item{no_of_centers}{The number of base locations to generate}
+
+\item{type}{The type of WKmeans implematation to use, options are "flexclust" or "swkm"}
 }
 \value{
 A list
