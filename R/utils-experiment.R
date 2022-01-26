@@ -44,7 +44,34 @@ generate_instances <- function(n = 5,
         arv = c("min" = ar_mean - j,
                 "max" = ar_mean + j)
       )
-      saveRDS(instance, file = paste0('./instances/',i,hexadec(size = 2),'.rds'))
+      saveRDS(instance, file = paste0('./instances/',
+                                      stringr::str_pad(i,2,"left","0"),
+                                      hexadec(size = 2),
+                                      '.rds'))
     }
   }
+
+  # Write file with metadata for the instances
+  instance_meta <- function(instance_file) {
+    instance <- readRDS(paste0("./instances/", instance_file))
+    instance_id <- tools::file_path_sans_ext(instance_file)
+
+    tibble::tibble(
+      instance_id = instance_id,
+      point_location_id = substr(instance_id,1,2),
+      demand_dist_id = substr(instance_id,3,nchar(instance_id)),
+      arv_min = instance$arv["min"],
+      arv_max = instance$arv["max"]
+    )
+  }
+
+  metadata <- do.call(
+    dplyr::bind_rows,
+    lapply(
+      list.files("instances") %>% as.list(),
+      instance_meta
+    )
+  )
+
+  saveRDS(object = metadata, file = "instance_metadata.rds")
 }
