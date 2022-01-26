@@ -76,7 +76,17 @@ generate_instances <- function(n = 5,
   saveRDS(object = metadata, file = "instance_metadata.rds")
 }
 
-generate_solution <- function(methods = c("km", "wkm"), no_of_centers = c(5, 15)) {
+#' Generates solutions to instances
+#'
+#' A solution is generated and saved in the solution folder for all combinations of methods and number of centers.
+#'
+#' @param methods character vector of methods to use for solution (currently: km, wkm)
+#' @param no_of_centers integer vector of number of centers, or uavs, to include
+#'
+#' @return nothing
+#' @export
+#'
+generate_solutions <- function(methods = c("km", "wkm"), no_of_centers = c(5, 15)) {
   # first we make a instance directory if not already present
   if (dir.exists("solutions")) {
     message("A solution directory was found so new instances will be placed in the existing directory")
@@ -86,13 +96,15 @@ generate_solution <- function(methods = c("km", "wkm"), no_of_centers = c(5, 15)
   }
 
   # find instances and load into a list
-  instances <- lapply(
+  message("Reading instances from the instance directory")
+  instances <<- lapply(
     list.files("instances") %>% as.list(),
     function(instance_file) readRDS(paste0("./instances/", instance_file))
   )
   names(instances) <- tools::file_path_sans_ext(list.files("instances"))
 
   # generate solution parameters based on instances and methods
+  message("Generating solution parameters")
   params <- expand.grid(names(instances), methods, no_of_centers) %>%
     dplyr::rename(instance = Var1, method = Var2, no_of_centers = Var3)
 
@@ -124,15 +136,39 @@ generate_solution <- function(methods = c("km", "wkm"), no_of_centers = c(5, 15)
   }
 
   # generating solution in parallel
+  message("Generating solutions")
   num_cores <- parallel::detectCores(logical = F)
   cl <- parallel::makeCluster(num_cores)
-
+  message("Exporting instances to cluster")
   invisible(parallel::clusterExport(cl, c('instances')))
   invisible(parallel::clusterEvalQ(cl, library(zav)))
+  message("Call to pblapply")
   pbapply::pblapply(params_list, solve_and_save, cl = cl) -> res
 
   parallel::stopCluster(cl)
 
   # generating solution metadata
+  solution_meta <- function(solution_file) {
+    solution <- readRDS(paste0("./solutions/",solution_file))
+    split_name <- stringr::str_split(string = tools::file_path_sans_ext(solution_file),
+                                     pattern = "_")
 
+    tibble::tibble(
+      solution_id = split_name[[1]][1],
+      instance_id = split_name[[1]][2],
+      solution_method = split_name[[1]][3],
+      number_of_uavs = as.numeric(split_name[[1]][4]),
+      TOT = TOT(solution),
+      WCSS = WCSS(solution)
+    )
+  }
+
+  metadata <- do.call(
+    dplyr::bind_rows,
+    lapply(
+      list.files("solutions") %>% as.list(),
+      solution_meta
+    )
+  )
+  saveRDS(metadata, file = "solution_metadata.rds")
 }
