@@ -100,7 +100,7 @@ simulation_result <- simulation(
 ```
 
 ```{r}
-simulation_result$metrics[[1]]$response_time_performance
+# simulation_result$metrics[[1]]$response_time_performance
 ```
 
 
