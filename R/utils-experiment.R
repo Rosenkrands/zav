@@ -126,7 +126,8 @@ generate_solutions <- function(methods = c("km", "wkm"), no_of_centers = c(5, 15
                                no_of_centers = param$no_of_centers)
     } else if (param$method == "wkm") {
       solution <- solve_wkmeans(instance = instances[[param$instance]],
-                                no_of_centers = param$no_of_centers)
+                                no_of_centers = param$no_of_centers,
+                                type = "swkm")
     } else {
       stop(paste0("method '", param$method, "' not implemented."))
     }
