@@ -3,9 +3,17 @@
 
 #' Calculate euclidean distance for the safety distances
 #'
-#' @param A A data.matrix produced in the simulation
+#' @param A data.matrix produced in the simulation
 #' @export
 sim_dist <- function(A) {
     .Call('_zav_sim_dist', PACKAGE = 'zav', A)
+}
+
+#' Calculate smallest distance between points not in same zone
+#'
+#' @param A data.matrix produced from solve_ga function with obj == "SAFE"
+#' @export
+safe_dist <- function(A) {
+    .Call('_zav_safe_dist', PACKAGE = 'zav', A)
 }
 

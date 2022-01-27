@@ -9,7 +9,8 @@
 #' plot_point(instance = generate_2d_instance())
 plot_point <- function(instance) {
   ggplot2::ggplot(instance$data) +
-    ggplot2::geom_point(ggplot2::aes(x,y,size=`Arrival rate`)) +
+    ggplot2::geom_point(ggplot2::aes(x,y,size=`Arrival rate`),
+                        shape = 21, fill = alpha("black", .2)) +
     ggplot2::theme_void()
 }
 
@@ -31,7 +32,8 @@ plot_centroid <- function(instance, centroids) {
   }
 
   ggplot2::ggplot(instance$data) +
-    ggplot2::geom_point(ggplot2::aes(x,y)) +
+    ggplot2::geom_point(ggplot2::aes(x,y,size=`Arrival rate`),
+                        shape = 21, fill = alpha("black", .2)) +
     ggplot2::geom_point(
       data = centroids$locations, ggplot2::aes(x, y), shape = 10, size = 5
     ) +
@@ -50,7 +52,7 @@ plot_centroid <- function(instance, centroids) {
 #' instance <- generate_2d_instance()
 #' solution <- solve_kmeans(instance = instance, no_of_centers = 5)
 #' plot_bases(instance = instance, solution = solution)
-plot_bases <- function(instance, solution) {
+plot_bases <- function(solution) {
   centroids <- solution$instance %>%
     dplyr::select(`Centroid id`, x.centroid, y.centroid) %>%
     dplyr::distinct()
@@ -58,10 +60,11 @@ plot_bases <- function(instance, solution) {
   ggplot2::ggplot(solution$instance) +
     ggplot2::geom_segment(ggplot2::aes(x = x, y = y, xend = x.centroid, yend = y.centroid),
                  color = "gray") +
-    ggplot2::geom_point(ggplot2::aes(x,y, color = `Centroid id`)) +
+    ggplot2::geom_point(ggplot2::aes(x,y, fill = `Centroid id`, size = `Arrival rate`, alpha = .2),
+                        shape = 21, color = "black") +
     ggplot2::geom_point(
       data = centroids,
-      ggplot2::aes(x.centroid, y.centroid, color=`Centroid id`), shape = 10, size = 5
+      ggplot2::aes(x.centroid, y.centroid), shape = 15, size = 2
     ) +
     ggplot2::theme_void()
 }

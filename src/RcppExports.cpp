@@ -21,9 +21,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// safe_dist
+double safe_dist(NumericMatrix A);
+RcppExport SEXP _zav_safe_dist(SEXP ASEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type A(ASEXP);
+    rcpp_result_gen = Rcpp::wrap(safe_dist(A));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_zav_sim_dist", (DL_FUNC) &_zav_sim_dist, 1},
+    {"_zav_safe_dist", (DL_FUNC) &_zav_safe_dist, 1},
     {NULL, NULL, 0}
 };
 

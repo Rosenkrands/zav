@@ -12,6 +12,7 @@ RoxygenNote: 7.1.2
 Imports: 
     dplyr,
     flexclust,
+    GA,
     ggplot2,
     magrittr,
     parallel,

@@ -7,7 +7,7 @@
 sim_dist(A)
 }
 \arguments{
-\item{A}{A data.matrix produced in the simulation}
+\item{A}{data.matrix produced in the simulation}
 }
 \description{
 Calculate euclidean distance for the safety distances
