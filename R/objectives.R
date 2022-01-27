@@ -6,7 +6,7 @@
 #' @export
 #'
 TOT <- function(solution) {
-  tau <- 1
+  tau <- 0
   solution$instance %>%
     dplyr::rowwise() %>%
     dplyr::mutate(Distance = euclid_norm(c(x-x.centroid, y-y.centroid))) %>%
