@@ -13,10 +13,10 @@
 solve_wkmeans <- function(instance, no_of_centers = 5, type = c("flexclust", "swkm")) {
   if (type == "flexclust") {
     coordinates <- instance$data %>% dplyr::select(.data$x, .data$y)
-    centroids <- flexclust::stepFlexclust(x = coordinates, k = no_of_centers, nrep = 10,
+    centroids <- flexclust::stepFlexclust(x = coordinates, k = no_of_centers, nrep = 100000,
                                           weights = instance$data$`Arrival rate`, FUN = "cclust",
                                           dist = "euclidean", verbose = F,
-                                          method = "hardcl", control = list(iter.max = 1000))
+                                          method = "hardcl", control = list(iter.max = 100))
     #
     clusters <- as.data.frame(centroids@centers)
     clustering_vector <- centroids@cluster
@@ -24,7 +24,8 @@ solve_wkmeans <- function(instance, no_of_centers = 5, type = c("flexclust", "sw
     centroids <- SWKM::kmeans.weight(
       x = instance$data %>% dplyr::select(x,y) %>% data.matrix(),
       K = no_of_centers,
-      weight = instance$data$`Arrival rate`
+      weight = instance$data$`Arrival rate`,
+      nstart = 1000
     )
 
     clusters <- as.data.frame(centroids$centers) %>% dplyr::rename(x = V1, y = V2)

@@ -2,23 +2,21 @@
 % Please edit documentation in R/plotting.R
 \name{plot_bases}
 \alias{plot_bases}
-\title{Plot base locations for KMeans solution}
+\title{Plot base locations for solution}
 \usage{
-plot_bases(instance, solution)
+plot_bases(solution)
 }
 \arguments{
-\item{instance}{A list returned from generate_2d_instance}
-
-\item{solution}{A list returned from solve_kmeans}
+\item{solution}{A list returned from a solution function}
 }
 \value{
 A ggplot object
 }
 \description{
-Plot base locations for KMeans solution
+Plot base locations for solution
 }
 \examples{
 instance <- generate_2d_instance()
 solution <- solve_kmeans(instance = instance, no_of_centers = 5)
-plot_bases(instance = instance, solution = solution)
+plot_bases(solution = solution)
 }

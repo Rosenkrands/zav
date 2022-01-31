@@ -7,8 +7,9 @@
 generate_instances(
   n = 5,
   no_of_points = 100,
-  ar_mean = 40,
-  ar_deviation = c(10, 35)
+  ar_mean = 0.5,
+  ar_deviation = c(0.1, 0.49),
+  ar_dist_type = c("uniform", "reciprocal")
 )
 }
 \arguments{
@@ -16,9 +17,11 @@ generate_instances(
 
 \item{no_of_points}{number of demand points in an instance}
 
-\item{ar_mean}{the arrival rate mean}
+\item{ar_mean}{the arrival rate mean (arrivals per minute)}
 
 \item{ar_deviation}{the deviation from arrival rate mean}
+
+\item{ar_dist_type}{Argument passed to \code{generate_2d_instance}}
 }
 \value{
 nothing

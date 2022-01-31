@@ -10,7 +10,7 @@
 plot_point <- function(instance) {
   ggplot2::ggplot(instance$data) +
     ggplot2::geom_point(ggplot2::aes(x,y,size=`Arrival rate`),
-                        shape = 21, fill = alpha("black", .2)) +
+                        shape = 21, fill = ggplot2::alpha("black", .2)) +
     ggplot2::theme_void()
 }
 
@@ -33,17 +33,16 @@ plot_centroid <- function(instance, centroids) {
 
   ggplot2::ggplot(instance$data) +
     ggplot2::geom_point(ggplot2::aes(x,y,size=`Arrival rate`),
-                        shape = 21, fill = alpha("black", .2)) +
+                        shape = 21, fill = ggplot2::alpha("black", .2)) +
     ggplot2::geom_point(
       data = centroids$locations, ggplot2::aes(x, y), shape = 10, size = 5
     ) +
     ggplot2::theme_void()
 }
 
-#' Plot base locations for KMeans solution
+#' Plot base locations for solution
 #'
-#' @param instance A list returned from generate_2d_instance
-#' @param solution A list returned from solve_kmeans
+#' @param solution A list returned from a solution function
 #'
 #' @return A ggplot object
 #' @export
@@ -51,7 +50,7 @@ plot_centroid <- function(instance, centroids) {
 #' @examples
 #' instance <- generate_2d_instance()
 #' solution <- solve_kmeans(instance = instance, no_of_centers = 5)
-#' plot_bases(instance = instance, solution = solution)
+#' plot_bases(solution = solution)
 plot_bases <- function(solution) {
   centroids <- solution$instance %>%
     dplyr::select(`Centroid id`, x.centroid, y.centroid) %>%

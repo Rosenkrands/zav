@@ -4,7 +4,10 @@
 \alias{generate_solutions}
 \title{Generates solutions to instances}
 \usage{
-generate_solutions(methods = c("km", "wkm"), no_of_centers = c(5, 15))
+generate_solutions(
+  methods = c("km", "wkm-flexclust", "wkm-swkm", "ga-safe", "ga-tot"),
+  no_of_centers = c(5, 15)
+)
 }
 \arguments{
 \item{methods}{character vector of methods to use for solution (currently: km, wkm)}

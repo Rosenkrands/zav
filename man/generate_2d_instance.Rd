@@ -8,7 +8,8 @@ generate_2d_instance(
   seed = 1,
   no_of_points = 50,
   interval = c(min = -10, max = 10),
-  arv = c(min = 1/80, max = 1)
+  arv = c(min = 1/120, max = 1),
+  ar_dist_type = "uniform"
 )
 }
 \arguments{
@@ -18,7 +19,9 @@ generate_2d_instance(
 
 \item{interval}{A named vector of the range for the x and y axis}
 
-\item{arv}{A named vector of the range in the arrival rate}
+\item{arv}{A named vector of the range in the arrival rate (measured in requests per minute)}
+
+\item{ar_dist_type}{Whether the distribution of arrival rates follows a "uniform" or "reciprocal" distribution}
 }
 \value{
 A list

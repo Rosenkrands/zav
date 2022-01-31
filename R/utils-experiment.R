@@ -17,16 +17,18 @@ hexadec <- function(size = 64) {
 #'
 #' @param n number of instances to generate per class
 #' @param no_of_points number of demand points in an instance
-#' @param ar_mean the arrival rate mean
+#' @param ar_mean the arrival rate mean (arrivals per minute)
 #' @param ar_deviation the deviation from arrival rate mean
+#' @param ar_dist_type Argument passed to `generate_2d_instance`
 #'
 #' @return nothing
 #' @export
 #'
 generate_instances <- function(n = 5,
                                no_of_points = 100,
-                               ar_mean = 40,
-                               ar_deviation = c(10,35)) {
+                               ar_mean = .5,
+                               ar_deviation = c(.10,.49),
+                               ar_dist_type = c("uniform", "reciprocal")) {
   # first we make a instance directory if not already present
   if (dir.exists("instances")) {
     message("A instance directory was found so new instances will be placed in the existing directory")
@@ -42,7 +44,8 @@ generate_instances <- function(n = 5,
         seed = i,
         no_of_points = 100,
         arv = c("min" = ar_mean - j,
-                "max" = ar_mean + j)
+                "max" = ar_mean + j),
+        ar_dist_type = ar_dist_type
       )
       saveRDS(instance, file = paste0('./instances/',
                                       stringr::str_pad(i,2,"left","0"),
@@ -60,6 +63,7 @@ generate_instances <- function(n = 5,
       instance_id = instance_id,
       point_location_id = substr(instance_id,1,2),
       demand_dist_id = substr(instance_id,3,nchar(instance_id)),
+      ar_dist_type = instance$ar_dist_type,
       arv_min = instance$arv["min"],
       arv_max = instance$arv["max"]
     )
@@ -86,7 +90,8 @@ generate_instances <- function(n = 5,
 #' @return nothing
 #' @export
 #'
-generate_solutions <- function(methods = c("km", "wkm"), no_of_centers = c(5, 15)) {
+generate_solutions <- function(methods = c("km", "wkm-flexclust", "wkm-swkm", "ga-safe", "ga-tot"),
+                               no_of_centers = c(5, 15)) {
   # first we make a instance directory if not already present
   if (dir.exists("solutions")) {
     message("A solution directory was found so new instances will be placed in the existing directory")
@@ -103,6 +108,23 @@ generate_solutions <- function(methods = c("km", "wkm"), no_of_centers = c(5, 15
   )
   names(instances) <- tools::file_path_sans_ext(list.files("instances"))
 
+  # precalculate centroids if we are using ga methods
+  if (("ga-safe" %in% methods) | ("ga-tot" %in% methods)) {
+    message("Precalculating grid centroids for all instances")
+
+    num_cores <- parallel::detectCores(logical = F)
+    cl <- parallel::makeCluster(num_cores)
+    invisible(parallel::clusterEvalQ(cl, library(zav)))
+
+    centroids <- pbapply::pblapply(
+      instances,
+      function(instance) grid_centroids(instance, dimension = 8),
+      cl = cl
+    )
+
+    parallel::stopCluster(cl)
+  }
+
   # generate solution parameters based on instances and methods
   message("Generating solution parameters")
   params <- expand.grid(names(instances), methods, no_of_centers) %>%
@@ -114,20 +136,41 @@ generate_solutions <- function(methods = c("km", "wkm"), no_of_centers = c(5, 15
     # filename for the solution
     file = paste0(
       "./solutions/",
-      hexadec(size = 4),'_',
+      # hexadec(size = 4),'_',
       param$instance,'_',
       param$method,'_',
       param$no_of_centers,'.rds'
     )
 
+    if (file.exists(file)) {message("File already exists, continuing..."); return()}
+
+    # iterations to use in ga
+    miter = 100000
+
     # choose solution method based on param$method
     if (param$method == "km") {
       solution <- solve_kmeans(instance = instances[[param$instance]],
                                no_of_centers = param$no_of_centers)
-    } else if (param$method == "wkm") {
+    } else if (param$method == "wkm-swkm") {
       solution <- solve_wkmeans(instance = instances[[param$instance]],
                                 no_of_centers = param$no_of_centers,
                                 type = "swkm")
+    } else if (param$method == "wkm-flexclust") {
+      solution <- solve_wkmeans(instance = instances[[param$instance]],
+                                no_of_centers = param$no_of_centers,
+                                type = "flexclust")
+    } else if (param$method == "ga-tot") {
+      solution <- solve_ga(instance = instances[[param$instance]],
+                           centroids = centroids[[param$instance]],
+                           no_of_centers = param$no_of_centers,
+                           obj = "TOT",
+                           miter = miter)
+    } else if (param$method == "ga-safe") {
+      solution <- solve_ga(instance = instances[[param$instance]],
+                           centroids = centroids[[param$instance]],
+                           no_of_centers = param$no_of_centers,
+                           obj = "SAFE",
+                           miter = miter)
     } else {
       stop(paste0("method '", param$method, "' not implemented."))
     }
@@ -136,7 +179,7 @@ generate_solutions <- function(methods = c("km", "wkm"), no_of_centers = c(5, 15
     saveRDS(solution, file = file)
   }
 
-  # generating solution in parallel
+  # generating solutions in parallel
   message("Generating solutions")
   num_cores <- parallel::detectCores(logical = F)
   cl <- parallel::makeCluster(num_cores)
@@ -149,16 +192,17 @@ generate_solutions <- function(methods = c("km", "wkm"), no_of_centers = c(5, 15
   parallel::stopCluster(cl)
 
   # generating solution metadata
+  message("Generating metadata for solutions")
   solution_meta <- function(solution_file) {
     solution <- readRDS(paste0("./solutions/",solution_file))
     split_name <- stringr::str_split(string = tools::file_path_sans_ext(solution_file),
                                      pattern = "_")
 
     tibble::tibble(
-      solution_id = split_name[[1]][1],
-      instance_id = split_name[[1]][2],
-      solution_method = split_name[[1]][3],
-      number_of_uavs = as.numeric(split_name[[1]][4]),
+      # solution_id = split_name[[1]][1],
+      instance_id = split_name[[1]][1],
+      solution_method = split_name[[1]][2],
+      number_of_uavs = as.numeric(split_name[[1]][3]),
       TOT = TOT(solution),
       WCSS = WCSS(solution)
     )
