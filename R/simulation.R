@@ -21,7 +21,7 @@ simulation <- function(
   n_replications = 1,
   flight = c("zoned", "free"),
   max_dist = 1000000,
-  LOS = 600,
+  LOS = 14400,
   warmup = 0,
   speed_agent = 0.25, # Movement per time unit
   verbose = F
