@@ -80,7 +80,7 @@ generate_instances <- function(n = 5,
   saveRDS(object = metadata, file = "instance_metadata.rds")
 }
 
-#' Generates solutions to instances
+#' Generate solutions to instances
 #'
 #' A solution is generated and saved in the solution folder for all combinations of methods and number of centers.
 #'
@@ -200,6 +200,7 @@ generate_solutions <- function(methods = c("km", "wkm-flexclust", "wkm-swkm", "g
 
     tibble::tibble(
       # solution_id = split_name[[1]][1],
+      solution_file = solution_file,
       instance_id = split_name[[1]][1],
       solution_method = split_name[[1]][2],
       number_of_uavs = as.numeric(split_name[[1]][3]),
@@ -216,4 +217,65 @@ generate_solutions <- function(methods = c("km", "wkm-flexclust", "wkm-swkm", "g
     )
   )
   saveRDS(metadata, file = "solution_metadata.rds")
+}
+
+#' Generate simulations based on solutions
+#'
+#' A simulation is generated and saved in the solution folder for specified flight method, and max_dist for free flight.
+#'
+#' @param flight character vector of flight methods, currently `c("zoned","free")`.
+#' @param free_max_dist max distances for use with free flight, currently `c("0", ".2", ".5", "no constraint")`.
+#'
+#' @return nothing
+#' @export
+#'
+generate_simulations <- function(flight = c("zoned", "free"),
+                                 free_max_dist = c("0", ".2", ".5", "no constraint")) {
+  # create simulations directory if not already present
+  if (dir.exists("simulations")) {
+    message("A simulation directory was found so new simulations will be placed in the existing directory")
+  } else {
+    message("No simulation directory was found so a new one will be created")
+    dir.create("simulations")
+  }
+
+  # read metadata files
+  metadata <- readRDS("solution_metadata.rds") %>%
+    dplyr::inner_join(readRDS("instance_metadata.rds"), by = c("instance_id"))
+
+  # read solutions into a list
+  solutions <- pbapply::pblapply(
+    metadata$solution_file %>% split(1:nrow(metadata)),
+    function(file) readRDS(paste0('solutions/',file))
+  )
+  names(solutions) <- metadata$solution_file
+
+  params <- tibble::as_tibble_col(solutions) %>%
+    dplyr::rename(solution = value) %>%
+    dplyr::mutate(solution_file = metadata$solution_file) %>%
+    dplyr::full_join(tibble::tibble(max_dist = c("zoned", free_max_dist)), by = character())
+
+  params_list <- split(params, 1:nrow(params))
+
+  run_simulation <- function(param) {
+    # Determine flight method
+    if (param$max_dist == "zoned") {
+      flight = "zoned"
+      max_dist = 1000000
+    } else {
+      flight = "free"
+      if (param$max_dist != "no constraint") {
+        max_dist <- param$Solution[[1]]$instance %>%
+          mutate(distance = sqrt((x - x.centroid)^2 + (y - y.centroid)^2)) %>%
+          summarise(distance = max(distance)) %>%
+          mutate(distance = distance + as.numeric(param$max_dist) * nrow(param$solution[[1]]$clusters)) %>%
+          as.numeric()
+      } else {
+        max_dist = 1000000
+      }
+    }
+
+    rslt <- simulation(param$solution[[1]], flight = flight, max_dist = max_dist)
+    saveRDS(rslt, file = paste0('sim_', param$max_dist, '_', param$solution_file))
+  }
 }

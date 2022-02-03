@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils-experiment.R
 \name{generate_solutions}
 \alias{generate_solutions}
-\title{Generates solutions to instances}
+\title{Generate solutions to instances}
 \usage{
 generate_solutions(
   methods = c("km", "wkm-flexclust", "wkm-swkm", "ga-safe", "ga-tot"),

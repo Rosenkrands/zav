@@ -10,7 +10,7 @@ simulation(
   n_replications = 1,
   flight = c("zoned", "free"),
   max_dist = 1e+06,
-  LOS = 600,
+  LOS = 14400,
   warmup = 0,
   speed_agent = 0.25,
   verbose = F
