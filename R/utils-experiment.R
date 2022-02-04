@@ -257,6 +257,7 @@ generate_simulations <- function(flight = c("zoned", "free"),
 
   params_list <- split(params, 1:nrow(params))
 
+  #TODO: move creation of file name to the top and check if the file already exists, skip if it does. Also add simulations directory to file name.
   run_simulation <- function(param) {
     # Determine flight method
     if (param$max_dist == "zoned") {
