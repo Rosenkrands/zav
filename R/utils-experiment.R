@@ -265,10 +265,10 @@ generate_simulations <- function(flight = c("zoned", "free"),
     } else {
       flight = "free"
       if (param$max_dist != "no constraint") {
-        max_dist <- param$Solution[[1]]$instance %>%
-          mutate(distance = sqrt((x - x.centroid)^2 + (y - y.centroid)^2)) %>%
-          summarise(distance = max(distance)) %>%
-          mutate(distance = distance + as.numeric(param$max_dist) * nrow(param$solution[[1]]$clusters)) %>%
+        max_dist <- param$solution[[1]]$instance %>%
+          dplyr::mutate(distance = sqrt((x - x.centroid)^2 + (y - y.centroid)^2)) %>%
+          dplyr::summarise(distance = max(distance)) %>%
+          dplyr::mutate(distance = distance + as.numeric(param$max_dist) * nrow(param$solution[[1]]$clusters)) %>%
           as.numeric()
       } else {
         max_dist = 1000000
@@ -278,4 +278,17 @@ generate_simulations <- function(flight = c("zoned", "free"),
     rslt <- simulation(param$solution[[1]], flight = flight, max_dist = max_dist)
     saveRDS(rslt, file = paste0('sim_', param$max_dist, '_', param$solution_file))
   }
+
+  # set up of parallel computation
+  num_cores <- parallel::detectCores(logical = F)
+  cl <- parallel::makeCluster(num_cores)
+
+  parallel::clusterExport(cl, c('solutions'))
+  invisible(parallel::clusterEvalQ(cl, {library(zav)}))
+
+  pbapply::pblapply(
+    params_list,
+    run_simulation,
+    cl = cl
+  )
 }
