@@ -259,6 +259,10 @@ generate_simulations <- function(flight = c("zoned", "free"),
 
   #TODO: move creation of file name to the top and check if the file already exists, skip if it does. Also add simulations directory to file name.
   run_simulation <- function(param) {
+    file <- paste0('simulations/sim_', param$max_dist, '_', param$solution_file)
+
+    if (file.exists(file)) {message("File already exists, continuing..."); return()}
+
     # Determine flight method
     if (param$max_dist == "zoned") {
       flight = "zoned"
@@ -277,7 +281,7 @@ generate_simulations <- function(flight = c("zoned", "free"),
     }
 
     rslt <- simulation(param$solution[[1]], flight = flight, max_dist = max_dist)
-    saveRDS(rslt, file = paste0('sim_', param$max_dist, '_', param$solution_file))
+    saveRDS(rslt, file = )
   }
 
   # set up of parallel computation

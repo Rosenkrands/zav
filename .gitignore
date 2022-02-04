@@ -8,3 +8,4 @@ instance_metadata.rds
 solution_metadata.rds
 instances/*
 solutions/*
+simulations/*
