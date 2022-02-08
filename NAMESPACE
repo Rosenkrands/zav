@@ -3,6 +3,7 @@
 export("%>%")
 export(TOT)
 export(WCSS)
+export(experiment_results)
 export(generate_2d_instance)
 export(generate_instances)
 export(generate_simulations)

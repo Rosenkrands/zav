@@ -6,13 +6,16 @@
 \usage{
 generate_simulations(
   flight = c("zoned", "free"),
-  free_max_dist = c("0", ".2", ".5", "no constraint")
+  free_max_dist = c(".2"),
+  queue = c(T, F)
 )
 }
 \arguments{
 \item{flight}{character vector of flight methods, currently \code{c("zoned","free")}.}
 
 \item{free_max_dist}{max distances for use with free flight, currently \code{c("0", ".2", ".5", "no constraint")}.}
+
+\item{queue}{Logical specifiying whether a queue is desired or not (or both as default).}
 }
 \value{
 nothing

@@ -225,6 +225,7 @@ generate_solutions <- function(methods = c("km", "wkm-flexclust", "wkm-swkm", "g
 #'
 #' @param flight character vector of flight methods, currently `c("zoned","free")`.
 #' @param free_max_dist max distances for use with free flight, currently `c("0", ".2", ".5", "no constraint")`.
+#' @param queue Logical specifiying whether a queue is desired or not (or both as default).
 #'
 #' @return nothing
 #' @export
@@ -314,7 +315,7 @@ generate_simulations <- function(flight = c("zoned", "free"),
       simulation_file = simulation_file,
       # response time metrics
       `Mean response` = mean(simulation$metrics[[1]]$response_time_performance$response_time),
-      `90th percentile response` = quantile(simulation$metrics[[1]]$response_time_performance$response_time, probs = c(.9)),
+      `90th percentile response` = stats::quantile(simulation$metrics[[1]]$response_time_performance$response_time, probs = c(.9)),
       # fulfillment metrics
       Ploss = 1 - mean(
         simulation$metrics[[1]]$demand_performance$n_covered/simulation$metrics[[1]]$demand_performance$n_generated, na.rm = T
@@ -322,7 +323,7 @@ generate_simulations <- function(flight = c("zoned", "free"),
       # distance metrics (TODO: should maybe group by time and summarise distance = min(distance))
       `Minimum distance` = min(simulation$metrics[[1]]$distances$distance),
       `Mean distance` = mean(simulation$metrics[[1]]$distances$distance),
-      `5th percentile distance` = quantile(simulation$metrics[[1]]$distances$distance, probs = c(.05))
+      `5th percentile distance` = stats::quantile(simulation$metrics[[1]]$distances$distance, probs = c(.05))
     )
   }
 
