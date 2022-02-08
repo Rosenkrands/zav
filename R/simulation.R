@@ -278,7 +278,7 @@ simulation <- function(
                }
                else{
                  # No agent is available.
-                 if (queue = T) {
+                 if (queue == T) {
                    queue_list <- dplyr::bind_rows(queue_list,
                                           data.frame(call_id = next_call_id,
                                                      demand_id = event_now$demand_id,
