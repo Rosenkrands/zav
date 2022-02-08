@@ -9,7 +9,7 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   fig.path = "man/figures/README-",
-  out.width = "75%",
+  out.width = "100%",
   dpi = 300
 )
 ```
@@ -27,6 +27,8 @@ You can install the development version of zav from [GitHub](https://github.com/
 
 ``` r
 # install.packages("devtools")
+# note that there is a GitHub only dependency
+# devtools::install_github("cuhklinlab/SWKM")
 devtools::install_github("Rosenkrands/zav")
 ```
 
@@ -48,13 +50,13 @@ ggplot2::ggplot(instance$data) +
 
 ## Zoning solutions
 
-### KMeans
+### Weighted K-Means
 
-The below code chunk shows how we can utilize the `solve_kmeans` function to generate a solution for our problem instance.
+The below code chunk shows how we can utilize the `solve_wkmeans` function to generate a solution for our problem instance.
 
 ```{r solution}
-solution_km <- solve_kmeans(instance, no_of_centers = 5)
-plot_bases(solution = solution_km)
+solution_wkm <- solve_wkmeans(instance, no_of_centers = 5, type = "swkm")
+plot_bases(solution = solution_wkm)
 ```
 
 ### Genetic Algorithm
@@ -63,14 +65,14 @@ The below chunk shows how we can utilize the `solve_ga` function to generate a s
 
 First we need to precalculate centroids to use as input for the GA.
 
-```{r}
+```{r, cache=T}
 centroids <- grid_centroids(instance, dimension = 5)
 ```
 
 Having now the centroids and distances between demand points and centroids, we are able to give this as input for the GA.
 As a default the GA will have a maximum of 10 iterations for demonstration purposes, in reality we would have a much higher number of iterations. 
 
-```{r}
+```{r, cache=T}
 solution <- solve_ga(instance, centroids, no_of_centers = 5, obj = "SAFE")
 ```
 
@@ -78,19 +80,19 @@ solution <- solve_ga(instance, centroids, no_of_centers = 5, obj = "SAFE")
 plot_bases(solution)
 ```
 
-
 ## Simulation
 
 Here it is shown how you can make a simulation based on the solution just found:
 
-```{r simulation}
+```{r simulation, cache = T}
 #' The below line is for testing purposes
 #' solution = solution; seed = 1;n_replications = 1;flight = "zoned";max_dist = 1000000;LOS = 600;warmup = 0;speed_agent = .25;verbose = F
 simulation_result <- simulation(
-  solution = solution_km,
+  solution = solution_wkm,
   seed = 1,
   n_replications = 1,
   flight = "zoned",
+  queue = T,
   max_dist = 1000000,
   LOS = 600,
   warmup = 0,
@@ -115,3 +117,51 @@ simulation_result$metrics[[1]]$distances %>%
   theme(legend.position = "none")
 ```
 
+## Experiment Results
+
+To get analyze the results from the experiment conducted for the project we do the following.
+
+```{r}
+results <- experiment_results()
+```
+
+The `results` variable is a list of 3 `tibbles` containing information about instances, solutions and simulations respectively.
+
+### Instances
+
+If we take a look at the instances first we can see that there is a total of `r nrow(results$instance)` instances.
+These are distributed across the arrival rate distributions and arrival rate variances as seen below.
+
+```{r, message = F}
+results$instance |> 
+  dplyr::group_by(`Arrival rate distribution`, `Arrival rate variance`) |> 
+  dplyr::summarise(n = dplyr::n())
+```
+
+In the illustration below we can see the difference in arrival rate distribution between the uniform and unbalanced distribution.
+
+```{r, echo = F, fig.height=3}
+uniform_instance <- readRDS(system.file("extdata", "instances/010E.rds", package = "zav"))
+reciprocal_instance_paper <- readRDS(system.file("extdata", "instances/01HQ.rds", package = "zav"))
+
+cowplot::plot_grid(
+    zav::plot_point(uniform_instance) + ggplot2::ggtitle("Uniform distribution"),
+    zav::plot_point(reciprocal_instance_paper) + ggplot2::ggtitle("Unbalanced distribution")
+)
+```
+
+### Solutions
+
+Taking a look at the solutions we see that there are a total of `r nrow(results$solution)` solutions.
+These are distributed across:
+
+* `Solution method` that have `r nrow(unique(results$solution[, "Solution method"]))` levels: `r unique(results$solution[, "Solution method"][[1]])`.
+* `Number of UAVs` that have `r nrow(unique(results$solution[, "Number of UAVs"]))` levels: `r unique(results$solution[, "Number of UAVs"][[1]])`.
+
+#### Solution comparsion
+
+work in progress...
+
+### Simulations
+
+work in progress...
