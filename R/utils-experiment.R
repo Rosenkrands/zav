@@ -294,4 +294,42 @@ generate_simulations <- function(flight = c("zoned", "free"),
     run_simulation,
     cl = cl
   )
+
+  # generate simulation metadata
+  message("Generating metadata for simulations")
+  simulation_meta <- function(simulation_file) {
+    simulation <- readRDS(paste0("./simulations/",simulation_file))
+    split_name <- stringr::str_split(string = tools::file_path_sans_ext(simulation_file),
+                                     pattern = "_")
+
+    tibble::tibble(
+      solution_file = paste0(
+        stringr::str_c(split_name[[1]][3:5], collapse = "_"),
+        ".rds"
+      ),
+      flight_id = split_name[[1]][2],
+      simulation_file = simulation_file,
+      # response time metrics
+      `Mean response` = mean(simulation$metrics[[1]]$response_time_performance$response_time),
+      `90th percentile response` = quantile(simulation$metrics[[1]]$response_time_performance$response_time, probs = c(.9)),
+      # fulfillment metrics
+      Ploss = 1 - mean(
+        simulation$metrics[[1]]$demand_performance$n_covered/simulation$metrics[[1]]$demand_performance$n_generated, na.rm = T
+      ),
+      # distance metrics (TODO: should maybe group by time and summarise distance = min(distance))
+      `Minimum distance` = min(simulation$metrics[[1]]$distances$distance),
+      `Mean distance` = mean(simulation$metrics[[1]]$distances$distance),
+      `5th percentile distance` = quantile(simulation$metrics[[1]]$distances$distance, probs = c(.05))
+    )
+  }
+
+  metadata <- do.call(
+    dplyr::bind_rows,
+    pbapply::pblapply(
+      list.files("simulations") %>% as.list(),
+      simulation_meta,
+      cl = cl
+    )
+  )
+  saveRDS(metadata, file = "simulation_metadata.rds")
 }

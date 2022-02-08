@@ -4,6 +4,7 @@
 #' @param seed Passed to the set.seed function for reproducibility of results
 #' @param n_replications Number of times to repeat the simulation
 #' @param flight Whether to use hard zoning or soft zoning (free-flight)
+#' @param queue Whether or not to have a FCFS infinite length queue
 #' @param max_dist The maximum distance a demand point can be of a base to be serviced by that base
 #' @param LOS Length of simulation in seconds
 #' @param warmup Fraction of LOS to discard as warmup period
@@ -20,6 +21,7 @@ simulation <- function(
   seed = 1,
   n_replications = 1,
   flight = c("zoned", "free"),
+  queue = T,
   max_dist = 1000000,
   LOS = 14400,
   warmup = 0,
@@ -276,14 +278,18 @@ simulation <- function(
                }
                else{
                  # No agent is available.
-                 queue_list <- dplyr::bind_rows(queue_list,
-                                        data.frame(call_id = next_call_id,
-                                                   demand_id = event_now$demand_id,
-                                                   centroid_id = solution$instance %>%
-                                                     dplyr::filter(`Demand point id` == event_now$demand_id) %>%
-                                                     dplyr::select(`Centroid id`) %>% as.numeric(),
-                                                   time = t_now))
-                 next_call_id <- next_call_id + 1
+                 if (queue = T) {
+                   queue_list <- dplyr::bind_rows(queue_list,
+                                          data.frame(call_id = next_call_id,
+                                                     demand_id = event_now$demand_id,
+                                                     centroid_id = solution$instance %>%
+                                                       dplyr::filter(`Demand point id` == event_now$demand_id) %>%
+                                                       dplyr::select(`Centroid id`) %>% as.numeric(),
+                                                     time = t_now))
+                   next_call_id <- next_call_id + 1
+                 } else {
+                   # call is discharged as there is no queue
+                 }
                }
 
                # Generate next call
@@ -339,7 +345,7 @@ simulation <- function(
                          # With zoned flight we can filter the demand points on centroid id
                          queue_temp <- queue_list %>% dplyr::filter(centroid_id == agent_centroid_id)
                        } else if (flight == "free") {
-                         # With free flight we must filter demand points using search
+                         # With free flight we must filter demand points using search area
                          queue_temp <- queue_list %>%
                            dplyr::filter(
                              demand_id %in%
@@ -355,7 +361,7 @@ simulation <- function(
                          # sort the queue by time to ensure FCFS
                          queue_temp <- queue_temp[order(queue_temp$time), ]
                          next_in_queue <- queue_temp[1,] # pick the first call
-                         queue_list <- queue_list[queue_list$callid != next_in_queue$call_id,] # remove the call from the queue
+                         queue_list <- queue_list[queue_list$call_id != next_in_queue$call_id,] # remove the call from the queue
 
                          # update agent list
                          agent_list$status[agent_id] <- "BUSY"
