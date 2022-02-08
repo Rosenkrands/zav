@@ -230,7 +230,8 @@ generate_solutions <- function(methods = c("km", "wkm-flexclust", "wkm-swkm", "g
 #' @export
 #'
 generate_simulations <- function(flight = c("zoned", "free"),
-                                 free_max_dist = c("0", ".2", ".5", "no constraint")) {
+                                 free_max_dist = c(".2"), #c("0", ".2", ".5", "no constraint"),
+                                 queue = c(T, F)) {
   # create simulations directory if not already present
   if (dir.exists("simulations")) {
     message("A simulation directory was found so new simulations will be placed in the existing directory")
@@ -253,12 +254,13 @@ generate_simulations <- function(flight = c("zoned", "free"),
   params <- tibble::as_tibble_col(solutions) %>%
     dplyr::rename(solution = value) %>%
     dplyr::mutate(solution_file = metadata$solution_file) %>%
-    dplyr::full_join(tibble::tibble(max_dist = c("zoned", free_max_dist)), by = character())
+    dplyr::full_join(tibble::tibble(max_dist = c("zoned", free_max_dist)), by = character()) |>
+    dplyr::full_join(tibble::tibble(queue), by = character())
 
   params_list <- split(params, 1:nrow(params))
 
   run_simulation <- function(param) {
-    file <- paste0('simulations/sim_', param$max_dist, '_', param$solution_file)
+    file <- paste0('simulations/sim_', param$max_dist, '_', param$queue, '_', param$solution_file)
     if (file.exists(file)) {message("File already exists, continuing..."); return()}
 
     # Determine flight method
@@ -278,7 +280,7 @@ generate_simulations <- function(flight = c("zoned", "free"),
       }
     }
 
-    rslt <- simulation(param$solution[[1]], flight = flight, max_dist = max_dist)
+    rslt <- simulation(param$solution[[1]], flight = flight, max_dist = max_dist, queue = param$queue)
     saveRDS(rslt, file = file)
   }
 
@@ -304,10 +306,11 @@ generate_simulations <- function(flight = c("zoned", "free"),
 
     tibble::tibble(
       solution_file = paste0(
-        stringr::str_c(split_name[[1]][3:5], collapse = "_"),
+        stringr::str_c(split_name[[1]][4:6], collapse = "_"),
         ".rds"
       ),
       flight_id = split_name[[1]][2],
+      queue = as.logical(split_name[[1]][3]),
       simulation_file = simulation_file,
       # response time metrics
       `Mean response` = mean(simulation$metrics[[1]]$response_time_performance$response_time),
