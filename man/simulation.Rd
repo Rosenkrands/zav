@@ -9,6 +9,7 @@ simulation(
   seed = 1,
   n_replications = 1,
   flight = c("zoned", "free"),
+  queue = T,
   max_dist = 1e+06,
   LOS = 14400,
   warmup = 0,
@@ -24,6 +25,8 @@ simulation(
 \item{n_replications}{Number of times to repeat the simulation}
 
 \item{flight}{Whether to use hard zoning or soft zoning (free-flight)}
+
+\item{queue}{Whether or not to have a FCFS infinite length queue}
 
 \item{max_dist}{The maximum distance a demand point can be of a base to be serviced by that base}
 
