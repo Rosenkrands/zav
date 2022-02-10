@@ -160,7 +160,29 @@ These are distributed across:
 
 #### Solution comparsion
 
-work in progress...
+If we start by comparing ga-tot and wkm-swkm we see that the latter is able to outperform the first, with the high number of UAVs.
+
+```{r, echo=F, message=F}
+results$solution |> 
+  dplyr::filter(`Solution method` != "ga-safe") |> 
+  dplyr::group_by(`Solution method`, `Arrival rate variance`, `Arrival rate distribution`, `Number of UAVs`) |> 
+  dplyr::summarise(sd = sd(TOT), TOT = mean(TOT)) |> 
+  ggplot2::ggplot(ggplot2::aes(x = `Number of UAVs`, y = TOT, group = `Solution method`, color = `Solution method`)) +
+  ggplot2::geom_point() +
+  ggplot2::geom_line() +
+  ggplot2::geom_errorbar(ggplot2::aes(ymin = TOT - sd, ymax = TOT + sd), width = .05) +
+  ggplot2::facet_grid(`Arrival rate distribution`~`Arrival rate variance`, scales="free_y", labeller = ggplot2::label_both)
+```
+
+Next we will check the similarity of total arrival rate for uniform and unbalanced instances.
+
+```{r}
+results$instance |> 
+  dplyr::group_by(`Arrival rate distribution`) |> 
+  dplyr::summarise(mean(`Total arrival rate`))
+```
+
+The total arrival rate is not at all the same, so should maybe be adjusted after looking at the simulation results!
 
 ### Simulations
 

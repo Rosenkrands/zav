@@ -167,7 +167,27 @@ solutions. These are distributed across:
 
 #### Solution comparsion
 
-work in progress…
+If we start by comparing ga-tot and wkm-swkm we see that the latter is
+able to outperform the first, with the high number of UAVs.
+
+<img src="man/figures/README-unnamed-chunk-9-1.png" width="100%" />
+
+Next we will check the similarity of total arrival rate for uniform and
+unbalanced instances.
+
+``` r
+results$instance |> 
+  dplyr::group_by(`Arrival rate distribution`) |> 
+  dplyr::summarise(mean(`Total arrival rate`))
+#> # A tibble: 2 x 2
+#>   `Arrival rate distribution` `mean(\`Total arrival rate\`)`
+#>   <fct>                                                <dbl>
+#> 1 uniform                                             0.823 
+#> 2 unbalanced                                          0.0953
+```
+
+The total arrival rate is not at all the same, so should maybe be
+adjusted after looking at the simulation results!
 
 ### Simulations
 
