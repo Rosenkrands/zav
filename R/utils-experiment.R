@@ -65,7 +65,8 @@ generate_instances <- function(n = 5,
       demand_dist_id = substr(instance_id,3,nchar(instance_id)),
       ar_dist_type = instance$ar_dist_type,
       arv_min = instance$arv["min"],
-      arv_max = instance$arv["max"]
+      arv_max = instance$arv["max"],
+      total_arrival_rate = sum(instance$data$`Arrival rate`)
     )
   }
 

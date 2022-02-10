@@ -23,7 +23,8 @@ experiment_results <- function() {
     dplyr::transmute(`Instance id` = instance_id,
                      `Point distribution` = factor(point_location_id),
                      `Arrival rate distribution` = factor(ar_dist_type, levels = c("uniform", "reciprocal"), labels = c("uniform", "unbalanced")),
-                     `Arrival rate variance` = factor(arv_max - arv_min, levels = c(0.2, 0.98), labels = c("low", "high")))
+                     `Arrival rate variance` = factor(arv_max - arv_min, levels = c(0.2, 0.98), labels = c("low", "high")),
+                     `Total arrival rate` = total_arrival_rate)
   solution_data_clean <- solution_metadata |>
     dplyr::filter(solution_method != "wkm-flexclust") |>
     dplyr::transmute(`Solution id` = solution_file,
