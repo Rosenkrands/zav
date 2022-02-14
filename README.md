@@ -225,8 +225,8 @@ given the no queue strategy, it would seem that we are giving up some
 response time to lower the ploss for *α* = 0. But for other values of
 *α* the performance are worse of overall.
 
-<img src="man/figures/README-unnamed-chunk-11-1.png" width="100%" />
+<img src="man/figures/README-queue_no-1.png" width="100%" />
 
 Results are exaggerated for the FCFS queue strategy.
 
-<img src="man/figures/README-unnamed-chunk-12-1.png" width="100%" />
+<img src="man/figures/README-queue_fcfs-1.png" width="100%" />

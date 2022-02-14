@@ -241,7 +241,7 @@ If we compare with the zoned solution approach with a free-flight approach we se
 Looking at the simulation performance measures mean response and ploss, given the no queue strategy, it would seem that we are giving up some response time to lower the ploss for $\alpha = 0$.
 But for other values of $\alpha$ the performance are worse of overall.
 
-```{r, echo=F, message=F, fig.dim=c(8,3)*1.1}
+```{r queue_no, echo=F, message=F, fig.dim=c(8,3)*1.1}
 results$simulation |> 
   filter(`Arrival rate distribution` == "uniform", 
                 `Queue strategy` == "No queue",
@@ -260,7 +260,7 @@ results$simulation |>
 
 Results are exaggerated for the FCFS queue strategy.
 
-```{r, echo=F, message=F, fig.dim=c(8,3)*1.1}
+```{r queue_fcfs, echo=F, message=F, fig.dim=c(8,3)*1.1}
 results$simulation |> 
   filter(`Arrival rate distribution` == "uniform", 
                 `Queue strategy` == "FCFS",
