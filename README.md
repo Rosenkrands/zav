@@ -173,11 +173,6 @@ we do the following.
 results <- experiment_results()
 ```
 
-``` r
-results$solution <- results$solution %>% filter(`Number of UAVs` == "high")
-results$simulation <- results$simulation %>% filter(`Number of UAVs` == "high")
-```
-
 The `results` variable is a list of 3 `tibbles` containing information
 about instances, solutions and simulations respectively.
 
@@ -212,7 +207,7 @@ solutions. These are distributed across:
 If we start by comparing ga-tot and wkm-swkm we see that the latter is
 able to outperform the first.
 
-<img src="man/figures/README-unnamed-chunk-11-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-10-1.png" width="100%" />
 
 ### Simulations
 
@@ -230,8 +225,8 @@ given the no queue strategy, it would seem that we are giving up some
 response time to lower the ploss for *α* = 0. But for other values of
 *α* the performance are worse of overall.
 
-<img src="man/figures/README-unnamed-chunk-12-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-11-1.png" width="100%" />
 
 Results are exaggerated for the FCFS queue strategy.
 
-<img src="man/figures/README-unnamed-chunk-13-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-12-1.png" width="100%" />
