@@ -14,7 +14,8 @@ simulation(
   LOS = 14400,
   warmup = 0,
   speed_agent = 0.25,
-  verbose = F
+  verbose = F,
+  dist_haversine = F
 )
 }
 \arguments{
@@ -37,6 +38,8 @@ simulation(
 \item{speed_agent}{Movement per time unit for an agent}
 
 \item{verbose}{Whether or not to print the information on the simulation}
+
+\item{dist_haversine}{Whether or not to use Haversine distance (for use with the york dataset)}
 }
 \value{
 None at the moment

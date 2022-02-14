@@ -13,6 +13,7 @@ Imports:
     dplyr,
     flexclust,
     GA,
+    geosphere,
     ggplot2,
     magrittr,
     parallel,
@@ -21,7 +22,8 @@ Imports:
     stats,
     stringr,
     SWKM,
-    tibble
+    tibble,
+    tidyr
 URL: https://github.com/Rosenkrands/zav
 BugReports: https://github.com/Rosenkrands/zav/issues
 LinkingTo: 
