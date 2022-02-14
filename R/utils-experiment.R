@@ -70,6 +70,7 @@ generate_instances <- function(n = 5,
     )
   }
 
+  message("Saving metadata for instances")
   metadata <- do.call(
     dplyr::bind_rows,
     lapply(
@@ -77,7 +78,6 @@ generate_instances <- function(n = 5,
       instance_meta
     )
   )
-
   saveRDS(object = metadata, file = "instance_metadata.rds")
 }
 
@@ -232,7 +232,7 @@ generate_solutions <- function(methods = c("km", "wkm-flexclust", "wkm-swkm", "g
 #' @export
 #'
 generate_simulations <- function(flight = c("zoned", "free"),
-                                 free_max_dist = c(".2"), #c("0", ".2", ".5", "no constraint"),
+                                 free_max_dist = c("0", ".2", ".5", "no constraint"),
                                  queue = c(T, F)) {
   # create simulations directory if not already present
   if (dir.exists("simulations")) {
@@ -306,6 +306,18 @@ generate_simulations <- function(flight = c("zoned", "free"),
     split_name <- stringr::str_split(string = tools::file_path_sans_ext(simulation_file),
                                      pattern = "_")
 
+    utilization <- simulation$metrics[[1]]$agent_log %>%
+      dplyr::select(centroid_id, status, time) %>%
+      dplyr::mutate(utilization = ifelse(status != "IDLE", 1, 0)) %>%
+      dplyr::group_by(time) %>%
+      dplyr::summarise(utilization = mean(utilization)) %>%
+      dplyr::mutate(utilization = tidyr::replace_na(cumsum(utilization)/time, 0),
+                    hours = time/60^2) %>%
+      dplyr::filter(time %% 60 == 0) %>%
+      dplyr::select(-time)
+      # ggplot2::ggplot(ggplot2::aes(x = hours, y = utilization)) +
+      # ggplot2::geom_line()
+
     tibble::tibble(
       solution_file = paste0(
         stringr::str_c(split_name[[1]][4:6], collapse = "_"),
@@ -324,7 +336,8 @@ generate_simulations <- function(flight = c("zoned", "free"),
       # distance metrics (TODO: should maybe group by time and summarise distance = min(distance))
       `Minimum distance` = min(simulation$metrics[[1]]$distances$distance),
       `Mean distance` = mean(simulation$metrics[[1]]$distances$distance),
-      `5th percentile distance` = stats::quantile(simulation$metrics[[1]]$distances$distance, probs = c(.05))
+      `5th percentile distance` = stats::quantile(simulation$metrics[[1]]$distances$distance, probs = c(.05)),
+      utilization = list(utilization)
     )
   }
 

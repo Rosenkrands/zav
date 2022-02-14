@@ -28,7 +28,7 @@ generate_2d_instance <- function(
     # hist(stats::runif(no_of_points, min = arv["min"]/60, max = arv["max"]/60))
     # hist(1/round((stats::runif(no_of_points, min = arv["min"]*60, max = arv["max"]*60))*60))
   } else if (ar_dist_type == "reciprocal") {
-    arrival_rate <- 1/round((stats::runif(no_of_points, min = arv["min"]*60, max = arv["max"]*60))*60)
+    arrival_rate <- 9/(round(stats::runif(no_of_points, min = arv["min"]*60, max = arv["max"]*60))*60)
   }
   data <- tibble::tibble(
     "Demand point id" = as.character(id),

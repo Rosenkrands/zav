@@ -10,6 +10,7 @@
 #' @param warmup Fraction of LOS to discard as warmup period
 #' @param speed_agent Movement per time unit for an agent
 #' @param verbose Whether or not to print the information on the simulation
+#' @param dist_haversine Whether or not to use Haversine distance (for use with the york dataset)
 #'
 #' @return None at the moment
 #' @export
@@ -26,14 +27,13 @@ simulation <- function(
   LOS = 14400,
   warmup = 0,
   speed_agent = 0.25, # Movement per time unit
-  verbose = F
+  verbose = F,
+  dist_haversine = F
 ) {
   set.seed(seed)
 
   # Get number of demand points from the solution instance
   n_demands = nrow(solution$instance)
-
-  # G
   total_demand_rate = sum(solution$instance$`Arrival rate`)
 
   n_agents = solution$no_of_centers
@@ -56,7 +56,11 @@ simulation <- function(
   }
 
   get_distance <- function (x1, y1, x2, y2){
-    return(((x1-x2)^2 +(y1-y2)^2)^0.5)
+    if (dist_haversine) {
+      return((geosphere::distm(c(x1, y1), c(x2, y2), fun = geosphere::distHaversine)/1000)[1,1])
+    } else {
+      return(((x1-x2)^2 +(y1-y2)^2)^0.5)
+    }
   }
 
   if (flight == "zoned") {

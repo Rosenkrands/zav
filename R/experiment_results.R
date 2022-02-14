@@ -45,7 +45,8 @@ experiment_results <- function() {
                      Ploss,
                      `Minimum distance`,
                      `Mean distance`,
-                     `5th percentile distance`)
+                     `5th percentile distance`,
+                     utilization)
 
   # join cleaned files together
   results <- list(

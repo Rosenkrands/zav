@@ -39,13 +39,14 @@ To generate a problem instance we can utilize the `generate_2d_instance` functio
 ```{r example}
 library(zav)
 library(ggplot2)
+library(dplyr)
 
 instance <- generate_2d_instance(no_of_points = 100)
 # plot_point(instance = instance)
-ggplot2::ggplot(instance$data) +
-    ggplot2::geom_point(ggplot2::aes(x,y,size=`Arrival rate`),
+ggplot(instance$data) +
+    geom_point(aes(x,y,size=`Arrival rate`),
                         shape = 21, fill = alpha("black", .2)) +
-    ggplot2::theme_void()
+    theme_void()
 ```
 
 ## Zoning solutions
@@ -106,15 +107,68 @@ simulation_result <- simulation(
 ```
 
 
-```{r distances}
+```{r distances, fig.dim=c(8,3)*1.1}
 simulation_result$metrics[[1]]$distances %>%
   ggplot(aes(x = time, 
              y = distance,
              color = paste0(id1,'-',id2))) +
   geom_line() +
   labs(color = "Pair") +
-  theme_bw() +
   theme(legend.position = "none")
+```
+
+### Free-flight/Soft zoning
+
+As an argument to the simulation function we have `flight` that together with the `max_dist` argument allow the user to obtain simulation results from a "Free-flight" setup.
+Here we will give a brief introduction to the concept.
+
+If we set `fligth = "free"` and `max_dist` arbitrarily large any UAV would be able to service any demand. This is what we would refer to as free-flight.
+
+However when any UAV can service any demand then mean response will suffer from long travel distances.
+Therefore we propose using the following scheme to decide on a maximum distance for the service area
+
+$\text{r} = \text{dist}_\text{max} + \alpha \cdot \text{number of UAVs}$
+
+where $\alpha$ denotes the scaling factor and $\text{dist}_\text{max}$ denotes the maximum distance between a demand point and its base location.
+
+To further illustrate let us consider the following situation.
+
+```{r}
+instance <- generate_2d_instance(no_of_points = 40)
+solution <- solve_wkmeans(instance, no_of_centers = 4, type = "swkm")
+
+plot_bases(solution) + coord_fixed()
+```
+
+We can the illustrate the service area for different values of $\alpha$ as follows.
+
+```{r, echo = F, message=F}
+centroids <- solution$instance %>%
+    select(`Centroid id`, x.centroid, y.centroid) %>%
+    distinct() %>%
+    mutate(r = (solution$instance %>%
+      mutate(distance = sqrt((x - x.centroid)^2 + (y - y.centroid)^2)) %>%
+      summarise(distance = max(distance)))$distance
+    )
+
+  ggplot(solution$instance) +
+    ggforce::geom_circle(
+      data = centroids %>% 
+        left_join(tibble(n = c(0,0.2,0.5)), by = character()) %>%
+        mutate(r = r + n*4,
+               `Scaling factor` = factor(n)),
+      aes(x0 = x.centroid, y0 = y.centroid, r = r, fill = `Centroid id`, linetype = `Scaling factor`),
+      alpha = .1, color = "grey"
+    ) +
+    geom_segment(aes(x = x, y = y, xend = x.centroid, yend = y.centroid),
+                 color = "gray") +
+    geom_point(aes(x,y, fill = `Centroid id`, size = `Arrival rate`, alpha = .2),
+                        shape = 21, color = "black") +
+    geom_point(
+      data = centroids,
+      aes(x.centroid, y.centroid), shape = 15, size = 2
+    ) +
+    theme_void() + coord_fixed()
 ```
 
 ## Experiment Results
@@ -125,29 +179,22 @@ To get analyze the results from the experiment conducted for the project we do t
 results <- experiment_results()
 ```
 
+```{r}
+results$solution <- results$solution %>% filter(`Number of UAVs` == "high")
+results$simulation <- results$simulation %>% filter(`Number of UAVs` == "high")
+```
+
 The `results` variable is a list of 3 `tibbles` containing information about instances, solutions and simulations respectively.
 
 ### Instances
 
 If we take a look at the instances first we can see that there is a total of `r nrow(results$instance)` instances.
-These are distributed across the arrival rate distributions and arrival rate variances as seen below.
+These are distributed across the two arrival rate variances as seen below.
 
 ```{r, message = F}
 results$instance |> 
-  dplyr::group_by(`Arrival rate distribution`, `Arrival rate variance`) |> 
-  dplyr::summarise(n = dplyr::n())
-```
-
-In the illustration below we can see the difference in arrival rate distribution between the uniform and unbalanced distribution.
-
-```{r, echo = F, fig.height=3}
-uniform_instance <- readRDS(system.file("extdata", "instances/010E.rds", package = "zav"))
-reciprocal_instance_paper <- readRDS(system.file("extdata", "instances/01HQ.rds", package = "zav"))
-
-cowplot::plot_grid(
-    zav::plot_point(uniform_instance) + ggplot2::ggtitle("Uniform distribution"),
-    zav::plot_point(reciprocal_instance_paper) + ggplot2::ggtitle("Unbalanced distribution")
-)
+  group_by(`Arrival rate distribution`, `Arrival rate variance`) |> 
+  summarise(n = n())
 ```
 
 ### Solutions
@@ -156,34 +203,81 @@ Taking a look at the solutions we see that there are a total of `r nrow(results$
 These are distributed across:
 
 * `Solution method` that have `r nrow(unique(results$solution[, "Solution method"]))` levels: `r unique(results$solution[, "Solution method"][[1]])`.
-* `Number of UAVs` that have `r nrow(unique(results$solution[, "Number of UAVs"]))` levels: `r unique(results$solution[, "Number of UAVs"][[1]])`.
+<!-- * `Number of UAVs` that have `r nrow(unique(results$solution[, "Number of UAVs"]))` levels: `r unique(results$solution[, "Number of UAVs"][[1]])`. -->
 
 #### Solution comparsion
 
-If we start by comparing ga-tot and wkm-swkm we see that the latter is able to outperform the first, with the high number of UAVs.
+If we start by comparing ga-tot and wkm-swkm we see that the latter is able to outperform the first.
 
-```{r, echo=F, message=F}
+```{r, echo=F, message=F, fig.dim=c(8,3)*1.1}
 results$solution |> 
-  dplyr::filter(`Solution method` != "ga-safe") |> 
-  dplyr::group_by(`Solution method`, `Arrival rate variance`, `Arrival rate distribution`, `Number of UAVs`) |> 
-  dplyr::summarise(sd = sd(TOT), TOT = mean(TOT)) |> 
-  ggplot2::ggplot(ggplot2::aes(x = `Number of UAVs`, y = TOT, group = `Solution method`, color = `Solution method`)) +
-  ggplot2::geom_point() +
-  ggplot2::geom_line() +
-  ggplot2::geom_errorbar(ggplot2::aes(ymin = TOT - sd, ymax = TOT + sd), width = .05) +
-  ggplot2::facet_grid(`Arrival rate distribution`~`Arrival rate variance`, scales="free_y", labeller = ggplot2::label_both)
+  filter(`Solution method` != "ga-safe") |> 
+  group_by(`Solution method`, `Arrival rate variance`, `Arrival rate distribution`, `Number of UAVs`) |> 
+  summarise(sd = sd(TOT), TOT = mean(TOT)) |> 
+  ggplot(aes(x = `Arrival rate variance`, y = TOT, group = `Solution method`, color = `Solution method`)) +
+  geom_point() +
+  geom_line() +
+  geom_errorbar(aes(ymin = TOT - sd, ymax = TOT + sd), width = .05)
 ```
-
-Next we will check the similarity of total arrival rate for uniform and unbalanced instances.
-
-```{r}
-results$instance |> 
-  dplyr::group_by(`Arrival rate distribution`) |> 
-  dplyr::summarise(mean(`Total arrival rate`))
-```
-
-The total arrival rate is not at all the same, so should maybe be adjusted after looking at the simulation results!
 
 ### Simulations
 
-work in progress...
+Looking at the simulation results we can see how the utilization is affected by the queuing strategy.
+First we can take a look at the zoned solution approach.
+
+```{r, echo=F, message=F, utilization, fig.dim=c(8,3)*1.1}
+results$simulation %>%
+  select(`Instance id`, `Arrival rate distribution`, `Arrival rate variance`, `Solution method`, `Number of UAVs`, `Flight configuration`, `Queue strategy`, utilization) %>%
+  filter(`Solution method` == "wkm-swkm", `Flight configuration` == "Zoned",
+                `Arrival rate distribution` == "uniform") %>%
+  transmute(group = paste0(`Instance id`, "-", `Queue strategy`), `Instance id`, `Queue strategy`, `Arrival rate variance`, utilization) %>%
+  tidyr::unnest(cols = utilization) %>%
+  group_by(hours, `Queue strategy`, `Arrival rate variance`) %>%
+  summarise(min_util = min(utilization), max_util = max(utilization), mean_util = mean(utilization)) %>%
+  ggplot(aes(x= hours, group = `Queue strategy`)) +
+  geom_line(aes(y = mean_util, color = `Queue strategy`)) +
+  geom_ribbon(aes(ymin = min_util, ymax = max_util, fill = `Queue strategy`), alpha = .4) +
+  scale_y_continuous(limits = c(0,1)) +
+  facet_wrap(~`Arrival rate variance`, labeller = label_both)
+```
+
+If we compare with the zoned solution approach with a free-flight approach we see that the utilization go to 1 with the FCFS queue.
+
+Looking at the simulation performance measures mean response and ploss, given the no queue strategy, it would seem that we are giving up some response time to lower the ploss for $\alpha = 0$.
+But for other values of $\alpha$ the performance are worse of overall.
+
+```{r, echo=F, message=F, fig.dim=c(8,3)*1.1}
+results$simulation |> 
+  filter(`Arrival rate distribution` == "uniform", 
+                `Queue strategy` == "No queue",
+                `Number of UAVs` == "high") |> 
+  tidyr::pivot_longer(cols = c(`Mean response`, Ploss), names_to = "Measure") |> 
+  mutate(Measure = factor(Measure, levels = c("Mean response", "Ploss"))) |>
+  group_by(Measure,`Arrival rate variance`,`Flight configuration`, `Number of UAVs`) |> 
+  summarise(error = qt(.975, df = n() - 1)*sd(value)/sqrt(n()),
+            value = mean(value)) |> 
+  ggplot(aes(x = `Arrival rate variance`, y = value, fill = `Flight configuration`)) +
+  geom_col(position = position_dodge(.9)) +
+  geom_errorbar(aes(ymin = value - error, ymax = value + error), width = .2, position = position_dodge(.9)) +
+  facet_wrap(~Measure, scales = "free", labeller = label_both) + 
+  labs(y="", title = "Queue strategy: No queue")
+```
+
+Results are exaggerated for the FCFS queue strategy.
+
+```{r, echo=F, message=F, fig.dim=c(8,3)*1.1}
+results$simulation |> 
+  filter(`Arrival rate distribution` == "uniform", 
+                `Queue strategy` == "FCFS",
+                `Number of UAVs` == "high") |> 
+  tidyr::pivot_longer(cols = c(`Mean response`, Ploss), names_to = "Measure") |> 
+  mutate(Measure = factor(Measure, levels = c("Mean response", "Ploss"))) |>
+  group_by(Measure,`Arrival rate variance`,`Flight configuration`, `Number of UAVs`) |> 
+  summarise(error = qt(.975, df = n() - 1)*sd(value)/sqrt(n()),
+            value = mean(value)) |> 
+  ggplot(aes(x = `Arrival rate variance`, y = value, fill = `Flight configuration`)) +
+  geom_col(position = position_dodge(.9)) +
+  geom_errorbar(aes(ymin = value - error, ymax = value + error), width = .2, position = position_dodge(.9)) +
+  facet_wrap(~Measure, scales = "free", labeller = label_both) + 
+  labs(y="", title = "Queue strategy: FCFS")
+```

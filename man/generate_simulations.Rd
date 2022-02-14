@@ -6,7 +6,7 @@
 \usage{
 generate_simulations(
   flight = c("zoned", "free"),
-  free_max_dist = c(".2"),
+  free_max_dist = c("0", ".2", ".5", "no constraint"),
   queue = c(T, F)
 )
 }

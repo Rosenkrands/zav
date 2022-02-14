@@ -30,13 +30,22 @@ function.
 ``` r
 library(zav)
 library(ggplot2)
+library(dplyr)
+#> 
+#> Attaching package: 'dplyr'
+#> The following objects are masked from 'package:stats':
+#> 
+#>     filter, lag
+#> The following objects are masked from 'package:base':
+#> 
+#>     intersect, setdiff, setequal, union
 
 instance <- generate_2d_instance(no_of_points = 100)
 # plot_point(instance = instance)
-ggplot2::ggplot(instance$data) +
-    ggplot2::geom_point(ggplot2::aes(x,y,size=`Arrival rate`),
+ggplot(instance$data) +
+    geom_point(aes(x,y,size=`Arrival rate`),
                         shape = 21, fill = alpha("black", .2)) +
-    ggplot2::theme_void()
+    theme_void()
 ```
 
 <img src="man/figures/README-example-1.png" width="100%" />
@@ -114,11 +123,46 @@ simulation_result$metrics[[1]]$distances %>%
              color = paste0(id1,'-',id2))) +
   geom_line() +
   labs(color = "Pair") +
-  theme_bw() +
   theme(legend.position = "none")
 ```
 
 <img src="man/figures/README-distances-1.png" width="100%" />
+
+### Free-flight/Soft zoning
+
+As an argument to the simulation function we have `flight` that together
+with the `max_dist` argument allow the user to obtain simulation results
+from a “Free-flight” setup. Here we will give a brief introduction to
+the concept.
+
+If we set `fligth = "free"` and `max_dist` arbitrarily large any UAV
+would be able to service any demand. This is what we would refer to as
+free-flight.
+
+However when any UAV can service any demand then mean response will
+suffer from long travel distances. Therefore we propose using the
+following scheme to decide on a maximum distance for the service area
+
+r = dist<sub>max</sub> + *α* ⋅ number of UAVs
+
+where *α* denotes the scaling factor and dist<sub>max</sub> denotes the
+maximum distance between a demand point and its base location.
+
+To further illustrate let us consider the following situation.
+
+``` r
+instance <- generate_2d_instance(no_of_points = 40)
+solution <- solve_wkmeans(instance, no_of_centers = 4, type = "swkm")
+
+plot_bases(solution) + coord_fixed()
+```
+
+<img src="man/figures/README-unnamed-chunk-6-1.png" width="100%" />
+
+We can the illustrate the service area for different values of *α* as
+follows.
+
+<img src="man/figures/README-unnamed-chunk-7-1.png" width="100%" />
 
 ## Experiment Results
 
@@ -129,66 +173,65 @@ we do the following.
 results <- experiment_results()
 ```
 
+``` r
+results$solution <- results$solution %>% filter(`Number of UAVs` == "high")
+results$simulation <- results$simulation %>% filter(`Number of UAVs` == "high")
+```
+
 The `results` variable is a list of 3 `tibbles` containing information
 about instances, solutions and simulations respectively.
 
 ### Instances
 
 If we take a look at the instances first we can see that there is a
-total of 80 instances. These are distributed across the arrival rate
-distributions and arrival rate variances as seen below.
+total of 40 instances. These are distributed across the two arrival rate
+variances as seen below.
 
 ``` r
 results$instance |> 
-  dplyr::group_by(`Arrival rate distribution`, `Arrival rate variance`) |> 
-  dplyr::summarise(n = dplyr::n())
-#> # A tibble: 4 x 3
-#> # Groups:   Arrival rate distribution [2]
+  group_by(`Arrival rate distribution`, `Arrival rate variance`) |> 
+  summarise(n = n())
+#> # A tibble: 2 x 3
+#> # Groups:   Arrival rate distribution [1]
 #>   `Arrival rate distribution` `Arrival rate variance`     n
 #>   <fct>                       <fct>                   <int>
 #> 1 uniform                     low                        20
 #> 2 uniform                     high                       20
-#> 3 unbalanced                  low                        20
-#> 4 unbalanced                  high                       20
 ```
-
-In the illustration below we can see the difference in arrival rate
-distribution between the uniform and unbalanced distribution.
-
-<img src="man/figures/README-unnamed-chunk-8-1.png" width="100%" />
 
 ### Solutions
 
-Taking a look at the solutions we see that there are a total of 480
+Taking a look at the solutions we see that there are a total of 120
 solutions. These are distributed across:
 
 -   `Solution method` that have 3 levels: ga-safe, ga-tot, wkm-swkm.
--   `Number of UAVs` that have 2 levels: high, low.
+    <!-- * `Number of UAVs` that have 1 levels: high. -->
 
 #### Solution comparsion
 
 If we start by comparing ga-tot and wkm-swkm we see that the latter is
-able to outperform the first, with the high number of UAVs.
+able to outperform the first.
 
-<img src="man/figures/README-unnamed-chunk-9-1.png" width="100%" />
-
-Next we will check the similarity of total arrival rate for uniform and
-unbalanced instances.
-
-``` r
-results$instance |> 
-  dplyr::group_by(`Arrival rate distribution`) |> 
-  dplyr::summarise(mean(`Total arrival rate`))
-#> # A tibble: 2 x 2
-#>   `Arrival rate distribution` `mean(\`Total arrival rate\`)`
-#>   <fct>                                                <dbl>
-#> 1 uniform                                             0.823 
-#> 2 unbalanced                                          0.0953
-```
-
-The total arrival rate is not at all the same, so should maybe be
-adjusted after looking at the simulation results!
+<img src="man/figures/README-unnamed-chunk-11-1.png" width="100%" />
 
 ### Simulations
 
-work in progress…
+Looking at the simulation results we can see how the utilization is
+affected by the queuing strategy. First we can take a look at the zoned
+solution approach.
+
+<img src="man/figures/README-utilization-1.png" width="100%" />
+
+If we compare with the zoned solution approach with a free-flight
+approach we see that the utilization go to 1 with the FCFS queue.
+
+Looking at the simulation performance measures mean response and ploss,
+given the no queue strategy, it would seem that we are giving up some
+response time to lower the ploss for *α* = 0. But for other values of
+*α* the performance are worse of overall.
+
+<img src="man/figures/README-unnamed-chunk-12-1.png" width="100%" />
+
+Results are exaggerated for the FCFS queue strategy.
+
+<img src="man/figures/README-unnamed-chunk-13-1.png" width="100%" />
