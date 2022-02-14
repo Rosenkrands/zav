@@ -4,9 +4,6 @@
 .httr-oauth
 .DS_Store
 generating_solutions.R
-instance_metadata.rds
-solution_metadata.rds
-simulation_metadata.rds
 instances/*
 solutions/*
 simulations/*
