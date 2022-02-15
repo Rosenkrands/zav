@@ -32,3 +32,19 @@ WCSS <- function(solution) {
     as.numeric()
 }
 
+
+#' Smallest distance between demand points not in same zone
+#'
+#' @param solution A solution object from a solve_* function
+#'
+#' @return A single number that is the smallest distance
+#' @export
+#'
+SAFE <- function(solution) {
+  safe_dist(
+    solution$instance %>%
+      dplyr::mutate(Distance = 99999) %>%
+      dplyr::select(`Demand point id`, `Centroid id`, Distance, x, y) %>%
+      data.matrix()
+  )
+}
