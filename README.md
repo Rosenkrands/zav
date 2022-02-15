@@ -256,7 +256,7 @@ have higher utilization with `ga-tot` as compared to `wkm-swkm`.
 
 We believe this could be due to `ga-tot` having to base locations
 sharing the dense part of the service area, where as `wkm-swkm` only
-have one base location covering the dense area.
+have one base location covering the dense part of the area.
 
 <img src="man/figures/README-unnamed-chunk-14-1.png" width="100%" />
 
