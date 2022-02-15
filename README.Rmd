@@ -353,7 +353,7 @@ cowplot::plot_grid(
 
 Looking now at the mean response and ploss metrics from the simulation we see...
 
-```{r, echo=F, message=F, fig.dim=c(8,6)*1.1}
+```{r york_simulation_metrics, echo=F, message=F, fig.dim=c(8,6)*1.1}
 york |>
   tidyr::pivot_longer(cols = c(`Mean response`, Ploss), names_to = "Measure") |> 
   mutate(Measure = factor(Measure, levels = c("Mean response", "Ploss"))) |>

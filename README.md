@@ -263,4 +263,4 @@ have one base location covering the dense part of the area.
 Looking now at the mean response and ploss metrics from the simulation
 we see…
 
-<img src="man/figures/README-unnamed-chunk-15-1.png" width="100%" />
+<img src="man/figures/README-york_simulation_metrics-1.png" width="100%" />
