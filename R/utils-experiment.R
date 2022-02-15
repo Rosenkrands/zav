@@ -206,7 +206,8 @@ generate_solutions <- function(methods = c("km", "wkm-flexclust", "wkm-swkm", "g
       solution_method = split_name[[1]][2],
       number_of_uavs = as.numeric(split_name[[1]][3]),
       TOT = TOT(solution),
-      WCSS = WCSS(solution)
+      WCSS = WCSS(solution),
+      SAFE = SAFE(solution)
     )
   }
 
