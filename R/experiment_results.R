@@ -6,7 +6,7 @@
 #'
 #' The purpose of the function is to show how the raw metadata from the instances, solutions and simulations is transformed into the results data set.
 #'
-#' The function is taylored to the specific experiment conducted and will need to be revised to handle a new experiment.
+#' The function is tailored to the specific experiment conducted and will need to be revised to handle a new experiment.
 #' This is as a results of, but not limited to, the arrival rate variance and number of UAVs levels being hardcoded.
 #'
 #' @return A list of 3 tibbles.
@@ -32,7 +32,8 @@ experiment_results <- function() {
                      `Solution method` = factor(solution_method),
                      `Number of UAVs` = factor(number_of_uavs, levels = c(5, 15), labels = c("low", "high")),
                      TOT,
-                     WCSS)
+                     WCSS,
+                     SAFE)
   simulation_data_clean <- simulation_metadata |>
     dplyr::transmute(`Solution id` = solution_file,
                      `Flight configuration` = factor(
