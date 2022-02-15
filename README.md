@@ -230,3 +230,37 @@ response time to lower the ploss for *α* = 0. But for other values of
 Results are exaggerated for the FCFS queue strategy.
 
 <img src="man/figures/README-queue_fcfs-1.png" width="100%" />
+
+## Example with real data
+
+To see how the methods presented apply to real data we include the
+following section. From the R package `maxcovr` we found the York crime
+data set. We have sampled demand points from this data set, to mimic the
+original distribution, and made solutions and simulations.
+
+``` r
+# The results from the york data set are available here
+york <- readRDS(system.file("extdata", "york_simulation_metadata.rds", package = "zav"))
+```
+
+When comparing the solution we can see that `wkm-swkm` achieve a lower
+TOT objective as compared to `ga-tot`.
+
+<img src="man/figures/README-unnamed-chunk-12-1.png" width="100%" />
+
+Comparing now utilization of UAVs in the simulations we see that with
+low number of UAVs, low arrival rate variance and FCFS queue strategy we
+have higher utilization with `ga-tot` as compared to `wkm-swkm`.
+
+<img src="man/figures/README-unnamed-chunk-13-1.png" width="100%" />
+
+We believe this could be due to `ga-tot` having to base locations
+sharing the dense part of the service area, where as `wkm-swkm` only
+have one base location covering the dense area.
+
+<img src="man/figures/README-unnamed-chunk-14-1.png" width="100%" />
+
+Looking now at the mean response and ploss metrics from the simulation
+we see…
+
+<img src="man/figures/README-unnamed-chunk-15-1.png" width="100%" />

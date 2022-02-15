@@ -276,3 +276,91 @@ results$simulation |>
   facet_wrap(~Measure, scales = "free", labeller = label_both) + 
   labs(y="", title = "Queue strategy: FCFS")
 ```
+
+## Example with real data
+
+To see how the methods presented apply to real data we include the following section.
+From the R package `maxcovr` we found the York crime data set.
+We have sampled demand points from this data set, to mimic the original distribution, and made solutions and simulations.
+
+```{r}
+# The results from the york data set are available here
+york <- readRDS(system.file("extdata", "york_simulation_metadata.rds", package = "zav"))
+```
+
+When comparing the solution we can see that `wkm-swkm` achieve a lower TOT objective as compared to `ga-tot`.
+
+```{r, echo = F, message=F, fig.dim=c(8,3)*1.1}
+york |> 
+  group_by(`Solution method`, `Arrival rate variance`, `Number of UAVs`) |> 
+  summarise(sd = sd(TOT), TOT = mean(TOT)) |> 
+  ggplot(aes(x = `Arrival rate variance`, y = TOT, group = `Solution method`, color = `Solution method`)) +
+  geom_point() +
+  geom_line() +
+  facet_wrap(~`Number of UAVs`, labeller = label_both)
+```
+
+Comparing now utilization of UAVs in the simulations we see that with low number of UAVs, low arrival rate variance and FCFS queue strategy we have higher utilization with `ga-tot` as compared to `wkm-swkm`.
+
+```{r, echo=F, message=F, fig.dim=c(8,6)*1.1}
+york %>%
+  select(`Solution method`,`Number of UAVs`, `Queue strategy`, `Arrival rate variance`, utilization) %>%
+  tidyr::unnest(cols = utilization) %>%
+  group_by(hours, `Solution method`, `Queue strategy`, `Arrival rate variance`, `Number of UAVs`) %>%
+  summarise(min_util = min(utilization), max_util = max(utilization), mean_util = mean(utilization)) %>%
+  ggplot(aes(x= hours, group = paste0(`Solution method`, `Queue strategy`))) +
+  geom_line(aes(y = mean_util, linetype = `Queue strategy`, color = `Solution method`)) +
+  # geom_ribbon(aes(ymin = min_util, ymax = max_util, fill = `Queue strategy`), alpha = .4) +
+  scale_y_continuous(limits = c(0,.4)) +
+  facet_wrap(`Number of UAVs`~`Arrival rate variance`, labeller = label_both)
+
+```
+
+We believe this could be due to `ga-tot` having to base locations sharing the dense part of the service area, where as `wkm-swkm` only have one base location covering the dense area.
+
+```{r, echo=F, message=F, fig.dim=c(8,3.5)*1.1}
+clean_york <- function(york_solution) {
+  if (grepl("GA", york_solution)) {
+  solution <- readRDS(york_solution)
+
+  solution$no_of_centers <- nrow(solution$centroids)
+
+  solution$clusters <- solution$centroids %>%
+    dplyr::mutate(`Cluster id` = dplyr::row_number())
+
+  solution$instance <- solution$instance %>%
+    dplyr::inner_join(solution$clusters %>% dplyr::select(-x,-y), by = "Centroid id") %>%
+    dplyr::select(-`Centroid id`) %>%
+    dplyr::mutate(`Centroid id` = as.character(`Cluster id`)) %>%
+    dplyr::select(-`Cluster id`)
+
+    return(solution)
+  } else {
+    return(readRDS(york_solution))
+  }
+}
+
+york_solutions <- lapply(
+  list.files("inst/extdata/york", full.names = T) %>% as.list(),
+  clean_york
+)
+
+cowplot::plot_grid(
+  plot_bases(york_solutions[[3]]) + ggtitle("ga-tot"),
+  plot_bases(york_solutions[[7]]) + ggtitle("wkm-swkm")
+)
+```
+
+Looking now at the mean response and ploss metrics from the simulation we see...
+
+```{r, echo=F, message=F, fig.dim=c(8,3)*1.1}
+york |>
+  tidyr::pivot_longer(cols = c(`Mean response`, Ploss), names_to = "Measure") |> 
+  mutate(Measure = factor(Measure, levels = c("Mean response", "Ploss"))) |>
+  group_by(Measure,`Arrival rate variance`, `Solution method`, `Number of UAVs`) |> 
+  summarise(value = mean(value)) |> 
+  ggplot(aes(x = `Arrival rate variance`, y = value, color = `Solution method`, group = paste0(`Measure`,`Solution method`))) +
+  geom_point(alpha = .75) +
+  geom_line(alpha = .75) +
+  facet_grid(Measure~`Number of UAVs`, scales = "free", labeller = label_both)
+```
