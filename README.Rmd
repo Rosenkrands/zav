@@ -277,6 +277,36 @@ results$simulation |>
   labs(y="", title = "Queue strategy: FCFS")
 ```
 
+Looking at just the numbers we get for Ploss the following numbers for zoned and free-flight: no constraint.
+
+```{r, echo = F, message = F}
+results$simulation |> 
+  filter(`Solution method` %in% c("wkm-swkm"),
+         `Flight configuration` %in% c("Zoned", "Free-flight: no constraint")) |> 
+  tidyr::pivot_longer(cols = c(`Mean response`, Ploss), names_to = "Measure") |>
+  filter(Measure == "Ploss") |> 
+  group_by(`Solution method`, `Queue strategy`, `Flight configuration`, Measure) |>
+  summarise(value = mean(value)) |> 
+  tidyr::pivot_wider(names_from = `Flight configuration`, values_from = value) |> 
+  dplyr::select(-`Solution method`) |> 
+  knitr::kable(format = "pipe")
+```
+
+When looking at mean response we see the following difference.
+
+```{r, echo = F, message = F}
+results$simulation |> 
+  filter(`Solution method` %in% c("wkm-swkm"),
+         `Flight configuration` %in% c("Zoned", "Free-flight: no constraint")) |> 
+  tidyr::pivot_longer(cols = c(`Mean response`, Ploss), names_to = "Measure") |>
+  filter(Measure == "Mean response") |> 
+  group_by(`Solution method`, `Queue strategy`, `Flight configuration`, Measure) |>
+  summarise(value = mean(value)) |> 
+  tidyr::pivot_wider(names_from = `Flight configuration`, values_from = value) |> 
+  dplyr::select(-`Solution method`) |> 
+  knitr::kable(format = "pipe")
+```
+
 ## Example with real data
 
 To see how the methods presented apply to real data we include the following section.
