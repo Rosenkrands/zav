@@ -17,6 +17,6 @@ These are stored in a list which is returned by the function.
 \details{
 The purpose of the function is to show how the raw metadata from the instances, solutions and simulations is transformed into the results data set.
 
-The function is taylored to the specific experiment conducted and will need to be revised to handle a new experiment.
+The function is tailored to the specific experiment conducted and will need to be revised to handle a new experiment.
 This is as a results of, but not limited to, the arrival rate variance and number of UAVs levels being hardcoded.
 }
