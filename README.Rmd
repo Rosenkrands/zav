@@ -151,24 +151,27 @@ centroids <- solution$instance %>%
       summarise(distance = max(distance)))$distance
     )
 
-  ggplot(solution$instance) +
-    ggforce::geom_circle(
-      data = centroids %>% 
-        left_join(tibble(n = c(0,0.2,0.5)), by = character()) %>%
-        mutate(r = r + n*4,
-               `Scaling factor` = factor(n)),
-      aes(x0 = x.centroid, y0 = y.centroid, r = r, fill = `Centroid id`, linetype = `Scaling factor`),
-      alpha = .1, color = "grey"
-    ) +
-    geom_segment(aes(x = x, y = y, xend = x.centroid, yend = y.centroid),
-                 color = "gray") +
-    geom_point(aes(x,y, fill = `Centroid id`, size = `Arrival rate`, alpha = .2),
-                        shape = 21, color = "black") +
-    geom_point(
-      data = centroids,
-      aes(x.centroid, y.centroid), shape = 15, size = 2
-    ) +
-    theme_void() + coord_fixed()
+ggplot(solution$instance) +
+  ggforce::geom_circle(
+    data = centroids %>% 
+      left_join(tibble(n = c(0,0.2,0.5)), by = character()) %>%
+      mutate(r = r + n*4,
+             `Scaling factor` = factor(n)),
+    aes(x0 = x.centroid, y0 = y.centroid, r = r, fill = `Centroid id`, linetype = `Scaling factor`),
+    alpha = .1, color = "grey"
+  ) +
+  geom_segment(aes(x = x, y = y, xend = x.centroid, yend = y.centroid),
+               color = "gray") +
+  geom_point(aes(x,y, fill = `Centroid id`, size = `Arrival rate`, alpha = .2),
+                      shape = 21, color = "black") +
+  geom_point(
+    data = centroids,
+    aes(x.centroid, y.centroid), shape = 15, size = 2
+  ) +
+  theme_void() + coord_fixed() +
+  scale_alpha(guide = "none")
+
+ggsave("free_flight_distance_constraints.pdf", width = 6,height = 5)
 ```
 
 ## Experiment Results
@@ -245,7 +248,8 @@ But for other values of $\alpha$ the performance are worse of overall.
 results$simulation |> 
   filter(`Arrival rate distribution` == "uniform", 
                 `Queue strategy` == "No queue",
-                `Number of UAVs` == "high") |> 
+                `Number of UAVs` == "high",
+         `Solution method` == "wkm-swkm") |> 
   tidyr::pivot_longer(cols = c(`Mean response`, Ploss), names_to = "Measure") |> 
   mutate(Measure = factor(Measure, levels = c("Mean response", "Ploss"))) |>
   group_by(Measure,`Arrival rate variance`,`Flight configuration`, `Number of UAVs`) |> 
@@ -254,45 +258,23 @@ results$simulation |>
   ggplot(aes(x = `Arrival rate variance`, y = value, fill = `Flight configuration`)) +
   geom_col(position = position_dodge(.9)) +
   geom_errorbar(aes(ymin = value - error, ymax = value + error), width = .2, position = position_dodge(.9)) +
-  facet_wrap(~Measure, scales = "free", labeller = label_both) + 
-  labs(y="", title = "Queue strategy: No queue")
+  facet_wrap(~Measure, scales = "free", labeller = label_both)
+
+# ggsave("no_queue_metrics_flight_configuration.pdf", width = 8, height = 3)
 ```
 
 Results are exaggerated for the FCFS queue strategy.
 
 ```{r queue_fcfs, echo=F, message=F, fig.dim=c(8,3)*1.1}
 results$simulation |> 
-  filter(`Arrival rate distribution` == "uniform", 
-                `Queue strategy` == "FCFS",
-                `Number of UAVs` == "high") |> 
-  tidyr::pivot_longer(cols = c(`Mean response`, Ploss), names_to = "Measure") |> 
-  mutate(Measure = factor(Measure, levels = c("Mean response", "Ploss"))) |>
-  group_by(Measure,`Arrival rate variance`,`Flight configuration`, `Number of UAVs`) |> 
-  summarise(error = qt(.975, df = n() - 1)*sd(value)/sqrt(n()),
-            value = mean(value)) |> 
-  ggplot(aes(x = `Arrival rate variance`, y = value, fill = `Flight configuration`)) +
-  geom_col(position = position_dodge(.9)) +
-  geom_errorbar(aes(ymin = value - error, ymax = value + error), width = .2, position = position_dodge(.9)) +
-  facet_wrap(~Measure, scales = "free", labeller = label_both) + 
-  labs(y="", title = "Queue strategy: FCFS")
+  filter(`Queue strategy` == "FCFS", `Solution method` == "wkm-swkm") |> 
+  ggplot(aes(x = `Demands in queue`, fill = `Flight configuration`, color = `Flight configuration`)) +
+  geom_density(alpha = .2)
+
+# ggsave("demands_in_queue_flight_configuration.pdf", width = 8, height = 2)
 ```
 
-Looking at just the numbers we get for Ploss the following numbers for zoned and free-flight: no constraint.
-
-```{r, echo = F, message = F}
-results$simulation |> 
-  filter(`Solution method` %in% c("wkm-swkm"),
-         `Flight configuration` %in% c("Zoned", "Free-flight: no constraint")) |> 
-  tidyr::pivot_longer(cols = c(`Mean response`, Ploss), names_to = "Measure") |>
-  filter(Measure == "Ploss") |> 
-  group_by(`Solution method`, `Queue strategy`, `Flight configuration`, Measure) |>
-  summarise(value = mean(value)) |> 
-  tidyr::pivot_wider(names_from = `Flight configuration`, values_from = value) |> 
-  dplyr::select(-`Solution method`) |> 
-  knitr::kable(format = "pipe")
-```
-
-When looking at mean response we see the following difference.
+Looking at just the numbers we get for mean response the following numbers for zoned and free-flight: no constraint.
 
 ```{r, echo = F, message = F}
 results$simulation |> 

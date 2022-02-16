@@ -231,15 +231,8 @@ Results are exaggerated for the FCFS queue strategy.
 
 <img src="man/figures/README-queue_fcfs-1.png" width="100%" />
 
-Looking at just the numbers we get for Ploss the following numbers for
-zoned and free-flight: no constraint.
-
-| Solution method | Queue strategy | Measure |     Zoned | Free-flight: no constraint |
-|:----------------|:---------------|:--------|----------:|---------------------------:|
-| wkm-swkm        | FCFS           | Ploss   | 0.0449995 |                  0.7823347 |
-| wkm-swkm        | No queue       | Ploss   | 0.4237203 |                  0.7742534 |
-
-When looking at mean response we see the following difference.
+Looking at just the numbers we get for mean response the following
+numbers for zoned and free-flight: no constraint.
 
 | Solution method | Queue strategy | Measure       |      Zoned | Free-flight: no constraint |
 |:----------------|:---------------|:--------------|-----------:|---------------------------:|
@@ -261,19 +254,19 @@ york <- readRDS(system.file("extdata", "york_simulation_metadata.rds", package =
 When comparing the solution we can see that `wkm-swkm` achieve a lower
 TOT objective as compared to `ga-tot`.
 
-<img src="man/figures/README-unnamed-chunk-14-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-13-1.png" width="100%" />
 
 Comparing now utilization of UAVs in the simulations we see that with
 low number of UAVs, low arrival rate variance and FCFS queue strategy we
 have higher utilization with `ga-tot` as compared to `wkm-swkm`.
 
-<img src="man/figures/README-unnamed-chunk-15-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-14-1.png" width="100%" />
 
 We believe this could be due to `ga-tot` having to base locations
 sharing the dense part of the service area, where as `wkm-swkm` only
 have one base location covering the dense part of the area.
 
-<img src="man/figures/README-unnamed-chunk-16-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-15-1.png" width="100%" />
 
 Looking now at the mean response and ploss metrics from the simulation
 we see…
