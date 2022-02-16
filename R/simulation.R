@@ -124,16 +124,25 @@ simulation <- function(
 
     ### Precalculate the service area for each agent ###
     agent_dist <- function(id=c("p_id"=-1,"a_id"=-1)){
-      distance <- euclid_norm(
-        c(
-          dplyr::pull(
-            solution$instance[id[1,"p_id"], "x"] - centroid_locations[id[1,"a_id"], "x"]
-          ),
-          dplyr::pull(
-            solution$instance[id[1,"p_id"], "y"] - centroid_locations[id[1,"a_id"], "y"]
-          )
-        )
-      )
+      x1 <- dplyr::pull(solution$instance[id[1,"p_id"], "x"])
+      y1 <- dplyr::pull(solution$instance[id[1,"p_id"], "y"])
+
+      x2 <- dplyr::pull(solution$instance[id[1,"a_id"], "x"])
+      y2 <- dplyr::pull(solution$instance[id[1,"a_id"], "y"])
+
+      distance <- get_distance(x1,y1,x2,y2)
+
+      # distance <- euclid_norm(
+      #   c(
+      #     dplyr::pull(
+      #       solution$instance[id[1,"p_id"], "x"] - centroid_locations[id[1,"a_id"], "x"]
+      #     ),
+      #     dplyr::pull(
+      #       solution$instance[id[1,"p_id"], "y"] - centroid_locations[id[1,"a_id"], "y"]
+      #     )
+      #   )
+      # )
+
       return(
         tibble::tibble(
           `Demand point id` = id[1,"p_id"],
