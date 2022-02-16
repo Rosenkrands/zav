@@ -44,6 +44,7 @@ experiment_results <- function() {
                      `Mean response`,
                      `90th percentile response`,
                      Ploss,
+                     `Demands in queue`,
                      `Minimum distance`,
                      `Mean distance`,
                      `5th percentile distance`,

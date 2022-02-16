@@ -334,6 +334,9 @@ generate_simulations <- function(flight = c("zoned", "free"),
       Ploss = 1 - mean(
         simulation$metrics[[1]]$demand_performance$n_covered/simulation$metrics[[1]]$demand_performance$n_generated, na.rm = T
       ),
+      `Demands in queue` = simulation$metrics[[1]]$demand_performance %>%
+        dplyr::summarise(demands_in_queue = sum(n_generated) - sum(n_covered)) %>%
+        as.numeric(),
       # distance metrics (TODO: should maybe group by time and summarise distance = min(distance))
       `Minimum distance` = min(simulation$metrics[[1]]$distances$distance),
       `Mean distance` = mean(simulation$metrics[[1]]$distances$distance),
