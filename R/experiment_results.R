@@ -44,7 +44,7 @@ experiment_results <- function() {
                      `Mean response`,
                      `90th percentile response`,
                      Ploss,
-                     `Demands in queue`,
+                     `Demands in queue` = ifelse(`Queue strategy` == "No queue", 0, `Demands in queue`),
                      `Minimum distance`,
                      `Mean distance`,
                      `5th percentile distance`,
