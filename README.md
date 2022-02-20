@@ -97,7 +97,7 @@ just found:
 
 ``` r
 #' The below line is for testing purposes
-#' solution = solution; seed = 1;n_replications = 1;flight = "zoned";max_dist = 1000000;LOS = 600;warmup = 0;speed_agent = .25;verbose = F
+#' solution = solution_wkm; seed = 1;n_replications = 1;flight = "free";max_dist = 1000000;LOS = 600;warmup = 0;speed_agent = .25;verbose = F; dist_haversine = T
 simulation_result <- simulation(
   solution = solution_wkm,
   seed = 1,
@@ -143,10 +143,11 @@ However when any UAV can service any demand then mean response will
 suffer from long travel distances. Therefore we propose using the
 following scheme to decide on a maximum distance for the service area
 
-r = dist<sub>max</sub> + *α* ⋅ number of UAVs
+$\\\\text{r} = \\\\text{dist}\\\_\\\\text{max} + \\\\alpha \\\\cdot \\\\text{number of UAVs}$
 
-where *α* denotes the scaling factor and dist<sub>max</sub> denotes the
-maximum distance between a demand point and its base location.
+where $\\\\alpha$ denotes the scaling factor and
+$\\\\text{dist}\\\_\\\\text{max}$ denotes the maximum distance between a
+demand point and its base location.
 
 To further illustrate let us consider the following situation.
 
@@ -159,8 +160,8 @@ plot_bases(solution) + coord_fixed()
 
 <img src="man/figures/README-unnamed-chunk-6-1.png" width="100%" />
 
-We can the illustrate the service area for different values of *α* as
-follows.
+We can the illustrate the service area for different values of
+$\\\\alpha$ as follows.
 
 <img src="man/figures/README-unnamed-chunk-7-1.png" width="100%" />
 
@@ -222,8 +223,8 @@ approach we see that the utilization go to 1 with the FCFS queue.
 
 Looking at the simulation performance measures mean response and ploss,
 given the no queue strategy, it would seem that we are giving up some
-response time to lower the ploss for *α* = 0. But for other values of
-*α* the performance are worse of overall.
+response time to lower the ploss for $\\\\alpha = 0$. But for other
+values of $\\\\alpha$ the performance are worse of overall.
 
 <img src="man/figures/README-queue_no-1.png" width="100%" />
 
@@ -268,7 +269,70 @@ have one base location covering the dense part of the area.
 
 <img src="man/figures/README-unnamed-chunk-15-1.png" width="100%" />
 
-Looking now at the mean response and ploss metrics from the simulation
-we see…
+To see how this affect the mean response for the zoned approach with no
+queue we can take a look at the following figure.
 
 <img src="man/figures/README-york_simulation_metrics-1.png" width="100%" />
+
+Looking at the figure we conclude that in general we see shorter
+response times for `wkm-swkm` but also a high Ploss when comparing to
+`ga-tot`.
+
+Next we can take a look at how introducing a queue affects the findings.
+
+<img src="man/figures/README-york_simulation_metrics_queue-1.png" width="100%" />
+
+First we notice that the winner in terms of mean response time have
+shifted and we now see better performance for `ga-tot` as compared to
+`wkm-swkm`. Looking at the demands in queue measure we also see better
+performance for `ga-tot` as compared to `wkm-swkm`.
+
+### Flight configurations
+
+Having looked at the zoned approach with different queuing strategies,
+this section will deal with the soft zoning strategies to see if they
+can improve performance.
+
+In the next figure we show how the mean response is affected by solution
+method, queue strategy and arrival rate variance. We restrict to only
+looking at high number of UAVs, the same pattern is true for low number
+of UAVs but exaggerated in case of the FCFS queue.
+
+<img src="man/figures/README-unnamed-chunk-16-1.png" width="100%" />
+
+In the case of having no queue, we see the same kind of pattern as from
+the uniformly generated instances, here the zoned approach can achieve
+the best mean response as it, by design, only chooses to service the
+closest demands.
+
+However this is not the case when introducing the queue, we suspect this
+is because now the even distribution of demand between UAVs become
+important as demands pile up in the queue a certain base is overworked.
+This seems to be the case, in particular for the `wkm-swkm` solution
+method where mean response for the zoned approach are much higher than
+any of the free-flight configurations.
+
+To further see the importance of balancing total arrival rate between
+zones we can take a look at the demands in queue metric for the high UAV
+case. Interestingly we have here that the free-flight: no constraint in
+all situation are able to serve all demand, leaving no demand in queue
+at the end of the simulation, where as for the `wkm-swkm` solution
+method leaves demand in queue for all other flight configurations.
+
+<img src="man/figures/README-unnamed-chunk-17-1.png" width="100%" />
+
+Lastly we can look at the Ploss for the no queue strategy.
+
+<img src="man/figures/README-unnamed-chunk-18-1.png" width="100%" />
+
+This also shows that the only flight configuration that is able to serve
+all demand is the free-flight: no constraint.
+
+Even though we have seen here the good performance for free-flight: no
+constraint, we would expect that this is also because of the low
+utilization of UAVs overall in the system. Had there been more strain on
+the system, then free-flight: no constraint would likely not have had
+the time to fly the long distances and thus have served all demand. In
+fact the ability to fly long distances to serve demand could be
+detrimental to overall performance if the UAV does not take the distance
+into consideration as part of the assignment policy.

@@ -1,5 +1,8 @@
 ---
 output: github_document
+editor_options: 
+  markdown: 
+    wrap: sentence
 ---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
@@ -17,6 +20,7 @@ knitr::opts_chunk$set(
 # Zoning for Autonomous Vehicles
 
 <!-- badges: start -->
+
 <!-- badges: end -->
 
 The goal of zav (Zoning for Autonomous Vehicles) is to show the implementation of the problem instance generation and simulation experiment conducted for the project.
@@ -71,7 +75,7 @@ centroids <- grid_centroids(instance, dimension = 5)
 ```
 
 Having now the centroids and distances between demand points and centroids, we are able to give this as input for the GA.
-As a default the GA will have a maximum of 10 iterations for demonstration purposes, in reality we would have a much higher number of iterations. 
+As a default the GA will have a maximum of 10 iterations for demonstration purposes, in reality we would have a much higher number of iterations.
 
 ```{r, cache=T}
 solution <- solve_ga(instance, centroids, no_of_centers = 5, obj = "SAFE")
@@ -87,7 +91,7 @@ Here it is shown how you can make a simulation based on the solution just found:
 
 ```{r simulation, cache = T}
 #' The below line is for testing purposes
-#' solution = solution; seed = 1;n_replications = 1;flight = "zoned";max_dist = 1000000;LOS = 600;warmup = 0;speed_agent = .25;verbose = F
+#' solution = solution_wkm; seed = 1;n_replications = 1;flight = "free";max_dist = 1000000;LOS = 600;warmup = 0;speed_agent = .25;verbose = F; dist_haversine = T
 simulation_result <- simulation(
   solution = solution_wkm,
   seed = 1,
@@ -106,7 +110,6 @@ simulation_result <- simulation(
 # simulation_result$metrics[[1]]$response_time_performance
 ```
 
-
 ```{r distances, fig.dim=c(8,3)*1.1}
 simulation_result$metrics[[1]]$distances %>%
   ggplot(aes(x = time, 
@@ -122,14 +125,15 @@ simulation_result$metrics[[1]]$distances %>%
 As an argument to the simulation function we have `flight` that together with the `max_dist` argument allow the user to obtain simulation results from a "Free-flight" setup.
 Here we will give a brief introduction to the concept.
 
-If we set `fligth = "free"` and `max_dist` arbitrarily large any UAV would be able to service any demand. This is what we would refer to as free-flight.
+If we set `fligth = "free"` and `max_dist` arbitrarily large any UAV would be able to service any demand.
+This is what we would refer to as free-flight.
 
 However when any UAV can service any demand then mean response will suffer from long travel distances.
 Therefore we propose using the following scheme to decide on a maximum distance for the service area
 
-$\text{r} = \text{dist}_\text{max} + \alpha \cdot \text{number of UAVs}$
+$\\text{r} = \\text{dist}\_\\text{max} + \\alpha \\cdot \\text{number of UAVs}$
 
-where $\alpha$ denotes the scaling factor and $\text{dist}_\text{max}$ denotes the maximum distance between a demand point and its base location.
+where $\\alpha$ denotes the scaling factor and $\\text{dist}\_\\text{max}$ denotes the maximum distance between a demand point and its base location.
 
 To further illustrate let us consider the following situation.
 
@@ -140,7 +144,7 @@ solution <- solve_wkmeans(instance, no_of_centers = 4, type = "swkm")
 plot_bases(solution) + coord_fixed()
 ```
 
-We can the illustrate the service area for different values of $\alpha$ as follows.
+We can the illustrate the service area for different values of $\\alpha$ as follows.
 
 ```{r, echo = F, message=F}
 centroids <- solution$instance %>%
@@ -200,8 +204,7 @@ results$instance |>
 Taking a look at the solutions we see that there are a total of `r nrow(results$solution)` solutions.
 These are distributed across:
 
-* `Solution method` that have `r nrow(unique(results$solution[, "Solution method"]))` levels: `r unique(results$solution[, "Solution method"][[1]])`.
-<!-- * `Number of UAVs` that have `r nrow(unique(results$solution[, "Number of UAVs"]))` levels: `r unique(results$solution[, "Number of UAVs"][[1]])`. -->
+-   `Solution method` that have `r nrow(unique(results$solution[, "Solution method"]))` levels: `r unique(results$solution[, "Solution method"][[1]])`. <!-- * `Number of UAVs` that have `r nrow(unique(results$solution[, "Number of UAVs"]))` levels: `r unique(results$solution[, "Number of UAVs"][[1]])`. -->
 
 #### Solution comparsion
 
@@ -241,8 +244,8 @@ results$simulation %>%
 
 If we compare with the zoned solution approach with a free-flight approach we see that the utilization go to 1 with the FCFS queue.
 
-Looking at the simulation performance measures mean response and ploss, given the no queue strategy, it would seem that we are giving up some response time to lower the ploss for $\alpha = 0$.
-But for other values of $\alpha$ the performance are worse of overall.
+Looking at the simulation performance measures mean response and ploss, given the no queue strategy, it would seem that we are giving up some response time to lower the ploss for $\\alpha = 0$.
+But for other values of $\\alpha$ the performance are worse of overall.
 
 ```{r queue_no, echo=F, message=F, fig.dim=c(8,3)*1.1}
 results$simulation |> 
@@ -316,12 +319,12 @@ Comparing now utilization of UAVs in the simulations we see that with low number
 
 ```{r, echo=F, message=F, fig.dim=c(8,6)*1.1}
 york %>%
-  select(`Solution method`,`Number of UAVs`, `Queue strategy`, `Arrival rate variance`, utilization) %>%
+  select(`Solution method`,`Number of UAVs`, queue, `Arrival rate variance`, utilization) %>%
   tidyr::unnest(cols = utilization) %>%
-  group_by(hours, `Solution method`, `Queue strategy`, `Arrival rate variance`, `Number of UAVs`) %>%
+  group_by(hours, `Solution method`, queue, `Arrival rate variance`, `Number of UAVs`) %>%
   summarise(min_util = min(utilization), max_util = max(utilization), mean_util = mean(utilization)) %>%
-  ggplot(aes(x= hours, group = paste0(`Solution method`, `Queue strategy`))) +
-  geom_line(aes(y = mean_util, linetype = `Queue strategy`, color = `Solution method`)) +
+  ggplot(aes(x= hours, group = paste0(`Solution method`, queue))) +
+  geom_line(aes(y = mean_util, linetype = queue, color = `Solution method`)) +
   # geom_ribbon(aes(ymin = min_util, ymax = max_util, fill = `Queue strategy`), alpha = .4) +
   scale_y_continuous(limits = c(0,.4)) +
   facet_wrap(`Number of UAVs`~`Arrival rate variance`, labeller = label_both)
@@ -363,10 +366,12 @@ cowplot::plot_grid(
 )
 ```
 
-Looking now at the mean response and ploss metrics from the simulation we see...
+To see how this affect the mean response for the zoned approach with no queue we can take a look at the following figure.
 
 ```{r york_simulation_metrics, echo=F, message=F, fig.dim=c(8,6)*1.1}
 york |>
+  filter(`Queue strategy` == "No queue",
+         `Flight configuration` == "Zoned") |> 
   tidyr::pivot_longer(cols = c(`Mean response`, Ploss), names_to = "Measure") |> 
   mutate(Measure = factor(Measure, levels = c("Mean response", "Ploss"))) |>
   group_by(Measure,`Arrival rate variance`, `Solution method`, `Number of UAVs`) |> 
@@ -376,3 +381,73 @@ york |>
   geom_line(alpha = .75) +
   facet_grid(Measure~`Number of UAVs`, scales = "free", labeller = label_both)
 ```
+
+Looking at the figure we conclude that in general we see shorter response times for `wkm-swkm` but also a high Ploss when comparing to `ga-tot`.
+
+Next we can take a look at how introducing a queue affects the findings.
+
+```{r york_simulation_metrics_queue, echo=F, message=F, fig.dim=c(8,6)*1.1}
+york |>
+  filter(`Queue strategy` == "FCFS",
+         `Flight configuration` == "Zoned") |> 
+  tidyr::pivot_longer(cols = c(`Mean response`, `Demands in queue`), names_to = "Measure") |> 
+  mutate(Measure = factor(Measure, levels = c("Mean response", "Demands in queue"))) |>
+  group_by(Measure,`Arrival rate variance`, `Solution method`, `Number of UAVs`) |> 
+  summarise(value = mean(value)) |> 
+  ggplot(aes(x = `Arrival rate variance`, y = value, color = `Solution method`, group = paste0(`Measure`,`Solution method`))) +
+  geom_point(alpha = .75) +
+  geom_line(alpha = .75) +
+  facet_wrap(Measure~`Number of UAVs`, scales = "free", labeller = label_both)
+```
+
+First we notice that the winner in terms of mean response time have shifted and we now see better performance for `ga-tot` as compared to `wkm-swkm`.
+Looking at the demands in queue measure we also see better performance for `ga-tot` as compared to `wkm-swkm`.
+
+### Flight configurations
+
+Having looked at the zoned approach with different queuing strategies, this section will deal with the soft zoning strategies to see if they can improve performance.
+
+In the next figure we show how the mean response is affected by solution method, queue strategy and arrival rate variance.
+We restrict to only looking at high number of UAVs, the same pattern is true for low number of UAVs but exaggerated in case of the FCFS queue.
+
+```{r, echo=F, message=F, fig.dim=c(8,6)*1.1}
+york |> 
+  filter(`Number of UAVs` == "high") |>
+  ggplot(aes(x = `Arrival rate variance`, y = `Mean response`, fill = `Flight configuration`)) +
+  geom_col(position = position_dodge(.9)) +
+  facet_grid(`Queue strategy`~`Solution method`, scales = "free", labeller = label_both)
+```
+
+In the case of having no queue, we see the same kind of pattern as from the uniformly generated instances, here the zoned approach can achieve the best mean response as it, by design, only chooses to service the closest demands.
+
+However this is not the case when introducing the queue, we suspect this is because now the even distribution of demand between UAVs become important as demands pile up in the queue a certain base is overworked.
+This seems to be the case, in particular for the `wkm-swkm` solution method where mean response for the zoned approach are much higher than any of the free-flight configurations.
+
+To further see the importance of balancing total arrival rate between zones we can take a look at the demands in queue metric for the high UAV case.
+Interestingly we have here that the free-flight: no constraint in all situation are able to serve all demand, leaving no demand in queue at the end of the simulation, where as for the `wkm-swkm` solution method leaves demand in queue for all other flight configurations.
+
+```{r, echo=F, message=F, fig.dim=c(8,3)*1.1}
+york |> 
+  filter(`Number of UAVs` == "high",
+         `Queue strategy` == "FCFS") |>
+  ggplot(aes(x = `Arrival rate variance`, y = `Demands in queue`, fill = `Flight configuration`)) +
+  geom_col(position = position_dodge(.9)) +
+  facet_grid(`Queue strategy`~`Solution method`, scales = "free", labeller = label_both)
+```
+
+Lastly we can look at the Ploss for the no queue strategy.
+
+```{r, echo=F, message=F, fig.dim=c(8,3)*1.1}
+york |> 
+  filter(`Number of UAVs` == "high",
+         `Queue strategy` == "No queue") |>
+  ggplot(aes(x = `Arrival rate variance`, y = Ploss, fill = `Flight configuration`)) +
+  geom_col(position = position_dodge(.9)) +
+  facet_grid(`Queue strategy`~`Solution method`, scales = "free", labeller = label_both)
+```
+
+This also shows that the only flight configuration that is able to serve all demand is the free-flight: no constraint.
+
+Even though we have seen here the good performance for free-flight: no constraint, we would expect that this is also because of the low utilization of UAVs overall in the system.
+Had there been more strain on the system, then free-flight: no constraint would likely not have had the time to fly the long distances and thus have served all demand.
+In fact the ability to fly long distances to serve demand could be detrimental to overall performance if the UAV does not take the distance into consideration as part of the assignment policy.
