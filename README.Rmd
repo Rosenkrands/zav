@@ -158,7 +158,7 @@ centroids <- solution$instance %>%
 ggplot(solution$instance) +
   ggforce::geom_circle(
     data = centroids %>% 
-      left_join(tibble(n = c(0,0.2,0.5)), by = character()) %>%
+      left_join(tibble(n = c(0)), by = character()) %>%
       mutate(r = r + n*4,
              `Scaling factor` = factor(n)),
     aes(x0 = x.centroid, y0 = y.centroid, r = r, fill = `Centroid id`, linetype = `Scaling factor`),
@@ -173,9 +173,11 @@ ggplot(solution$instance) +
     aes(x.centroid, y.centroid), shape = 15, size = 2
   ) +
   theme_void() + coord_fixed() +
-  scale_alpha(guide = "none")
+  scale_alpha(guide = "none") +
+  scale_fill_discrete(guide = "none") +
+  scale_linetype(guide = "none")
 
-ggsave("free_flight_distance_constraints.pdf", width = 6,height = 5)
+# ggsave("free_flight_distance_constraints.pdf", width = 6,height = 5)
 ```
 
 ## Experiment Results
@@ -296,7 +298,59 @@ results$simulation |>
 
 To see how the methods presented apply to real data we include the following section.
 From the R package `maxcovr` we found the York crime data set.
+The distribution of points from the data set looks as follows.
+
+```{r, echo=F, message=F, fig.dim=c(8,3)*1.1}
+data(york, package = "maxcovr")
+
+ggplot2::ggplot(york %>% select(long, lat) %>% distinct()) +
+  ggplot2::geom_point(ggplot2::aes(long,lat),
+                      shape = 21, fill = ggplot2::alpha("black", .2)) +
+  ggplot2::theme_void() + coord_fixed()
+
+# ggsave("location_overview_v2.pdf", width = 6, height = 3)
+```
+
 We have sampled demand points from this data set, to mimic the original distribution, and made solutions and simulations.
+The sample with assigned arrival rates is displayed in the following figure.
+
+```{r}
+# Read precalculated york solutions
+clean_york <- function(york_solution) {
+  if (grepl("GA", york_solution)) {
+    solution <- readRDS(york_solution)
+
+    solution$no_of_centers <- nrow(solution$centroids)
+
+    solution$clusters <- solution$centroids %>%
+      dplyr::mutate(`Cluster id` = dplyr::row_number())
+
+    solution$instance <- solution$instance %>%
+      dplyr::inner_join(solution$clusters %>% dplyr::select(-x,-y), by = "Centroid id") %>%
+      dplyr::select(-`Centroid id`) %>%
+      dplyr::mutate(`Centroid id` = as.character(`Cluster id`)) %>%
+      dplyr::select(-`Cluster id`)
+
+    return(solution)
+  } else {
+    return(readRDS(york_solution))
+  }
+}
+
+york_solutions <- lapply(
+  list.files("inst/extdata/york", full.names = T) %>% as.list(),
+  clean_york
+)
+
+ggplot2::ggplot(york_solutions[[1]]$instance) +
+  ggplot2::geom_point(ggplot2::aes(x,y, size = `Arrival rate`),
+                      shape = 21, fill = ggplot2::alpha("black", .2)) +
+  ggplot2::theme_void() + coord_fixed()
+
+ggsave("york_sample_with_arrival_rate.pdf", width = 8, height = 3)
+```
+
+We obtain metadata in the following way.
 
 ```{r}
 # The results from the york data set are available here

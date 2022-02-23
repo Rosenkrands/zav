@@ -244,8 +244,55 @@ numbers for zoned and free-flight: no constraint.
 
 To see how the methods presented apply to real data we include the
 following section. From the R package `maxcovr` we found the York crime
-data set. We have sampled demand points from this data set, to mimic the
-original distribution, and made solutions and simulations.
+data set. The distribution of points from the data set looks as follows.
+
+<img src="man/figures/README-unnamed-chunk-12-1.png" width="100%" />
+
+We have sampled demand points from this data set, to mimic the original
+distribution, and made solutions and simulations. The sample with
+assigned arrival rates is displayed in the following figure.
+
+``` r
+# Read precalculated york solutions
+clean_york <- function(york_solution) {
+  if (grepl("GA", york_solution)) {
+    solution <- readRDS(york_solution)
+
+    solution$no_of_centers <- nrow(solution$centroids)
+
+    solution$clusters <- solution$centroids %>%
+      dplyr::mutate(`Cluster id` = dplyr::row_number())
+
+    solution$instance <- solution$instance %>%
+      dplyr::inner_join(solution$clusters %>% dplyr::select(-x,-y), by = "Centroid id") %>%
+      dplyr::select(-`Centroid id`) %>%
+      dplyr::mutate(`Centroid id` = as.character(`Cluster id`)) %>%
+      dplyr::select(-`Cluster id`)
+
+    return(solution)
+  } else {
+    return(readRDS(york_solution))
+  }
+}
+
+york_solutions <- lapply(
+  list.files("inst/extdata/york", full.names = T) %>% as.list(),
+  clean_york
+)
+
+ggplot2::ggplot(york_solutions[[1]]$instance) +
+  ggplot2::geom_point(ggplot2::aes(x,y, size = `Arrival rate`),
+                      shape = 21, fill = ggplot2::alpha("black", .2)) +
+  ggplot2::theme_void() + coord_fixed()
+```
+
+<img src="man/figures/README-unnamed-chunk-13-1.png" width="100%" />
+
+``` r
+ggsave("york_sample_with_arrival_rate.pdf", width = 8, height = 3)
+```
+
+We obtain metadata in the following way.
 
 ``` r
 # The results from the york data set are available here
@@ -255,19 +302,19 @@ york <- readRDS(system.file("extdata", "york_simulation_metadata.rds", package =
 When comparing the solution we can see that `wkm-swkm` achieve a lower
 TOT objective as compared to `ga-tot`.
 
-<img src="man/figures/README-unnamed-chunk-13-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-15-1.png" width="100%" />
 
 Comparing now utilization of UAVs in the simulations we see that with
 low number of UAVs, low arrival rate variance and FCFS queue strategy we
 have higher utilization with `ga-tot` as compared to `wkm-swkm`.
 
-<img src="man/figures/README-unnamed-chunk-14-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-16-1.png" width="100%" />
 
 We believe this could be due to `ga-tot` having to base locations
 sharing the dense part of the service area, where as `wkm-swkm` only
 have one base location covering the dense part of the area.
 
-<img src="man/figures/README-unnamed-chunk-15-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-17-1.png" width="100%" />
 
 To see how this affect the mean response for the zoned approach with no
 queue we can take a look at the following figure.
@@ -298,7 +345,7 @@ method, queue strategy and arrival rate variance. We restrict to only
 looking at high number of UAVs, the same pattern is true for low number
 of UAVs but exaggerated in case of the FCFS queue.
 
-<img src="man/figures/README-unnamed-chunk-16-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-18-1.png" width="100%" />
 
 In the case of having no queue, we see the same kind of pattern as from
 the uniformly generated instances, here the zoned approach can achieve
@@ -319,11 +366,11 @@ all situation are able to serve all demand, leaving no demand in queue
 at the end of the simulation, where as for the `wkm-swkm` solution
 method leaves demand in queue for all other flight configurations.
 
-<img src="man/figures/README-unnamed-chunk-17-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-19-1.png" width="100%" />
 
 Lastly we can look at the Ploss for the no queue strategy.
 
-<img src="man/figures/README-unnamed-chunk-18-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-20-1.png" width="100%" />
 
 This also shows that the only flight configuration that is able to serve
 all demand is the free-flight: no constraint.
