@@ -289,7 +289,7 @@ ggplot2::ggplot(york_solutions[[1]]$instance) +
 <img src="man/figures/README-unnamed-chunk-13-1.png" width="100%" />
 
 ``` r
-ggsave("york_sample_with_arrival_rate.pdf", width = 8, height = 3)
+# ggsave("york_sample_with_arrival_rate.pdf", width = 8, height = 3)
 ```
 
 We obtain metadata in the following way.

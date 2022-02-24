@@ -347,7 +347,7 @@ ggplot2::ggplot(york_solutions[[1]]$instance) +
                       shape = 21, fill = ggplot2::alpha("black", .2)) +
   ggplot2::theme_void() + coord_fixed()
 
-ggsave("york_sample_with_arrival_rate.pdf", width = 8, height = 3)
+# ggsave("york_sample_with_arrival_rate.pdf", width = 8, height = 3)
 ```
 
 We obtain metadata in the following way.
