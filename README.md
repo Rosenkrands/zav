@@ -280,7 +280,7 @@ york_solutions <- lapply(
   clean_york
 )
 
-ggplot2::ggplot(york_solutions[[1]]$instance) +
+ggplot2::ggplot(york_solutions[[12]]$instance) +
   ggplot2::geom_point(ggplot2::aes(x,y, size = `Arrival rate`),
                       shape = 21, fill = ggplot2::alpha("black", .2)) +
   ggplot2::theme_void() + coord_fixed()

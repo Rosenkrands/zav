@@ -342,7 +342,7 @@ york_solutions <- lapply(
   clean_york
 )
 
-ggplot2::ggplot(york_solutions[[1]]$instance) +
+ggplot2::ggplot(york_solutions[[12]]$instance) +
   ggplot2::geom_point(ggplot2::aes(x,y, size = `Arrival rate`),
                       shape = 21, fill = ggplot2::alpha("black", .2)) +
   ggplot2::theme_void() + coord_fixed()
@@ -416,7 +416,9 @@ york_solutions <- lapply(
 
 cowplot::plot_grid(
   plot_bases(york_solutions[[3]]) + ggtitle("ga-tot"),
-  plot_bases(york_solutions[[7]]) + ggtitle("wkm-swkm")
+  plot_bases(york_solutions[[7]]) + ggtitle("ga-vot"),
+  plot_bases(york_solutions[[11]]) + ggtitle("wkm-swkm"),
+  ncol = 3
 )
 ```
 

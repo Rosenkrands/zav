@@ -5,7 +5,7 @@
 \title{Generate solutions to instances}
 \usage{
 generate_solutions(
-  methods = c("km", "wkm-flexclust", "wkm-swkm", "ga-safe", "ga-tot"),
+  methods = c("km", "wkm-flexclust", "wkm-swkm", "ga-safe", "ga-tot", "ga-otv"),
   no_of_centers = c(5, 15)
 )
 }

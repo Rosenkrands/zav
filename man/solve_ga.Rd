@@ -8,7 +8,7 @@ solve_ga(
   instance,
   centroids,
   no_of_centers,
-  obj = c("TOT", "SAFE"),
+  obj = c("TOT", "SAFE", "OTV"),
   miter = 10
 )
 }
