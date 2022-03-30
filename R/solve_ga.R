@@ -14,7 +14,7 @@
 solve_ga <- function(instance,
                      centroids,
                      no_of_centers,
-                     obj = c("TOT", "SAFE"),
+                     obj = c("TOT", "SAFE", "OTV"),
                      miter = 10) {
   bit_to_cent <- function(bitstring) {
     tibble::tibble(
@@ -79,6 +79,38 @@ solve_ga <- function(instance,
         dplyr::group_by(`Centroid id`)
       # Calculate safety distance with c++ function to speed up computation
       return(safe_dist(result %>% data.matrix) - len*1000)
+    }
+  } else if (obj == "OTV") {
+    function(bitstring) {
+      # first we ignore cases with less than 2 centroids by returning -Inf
+      if (sum(bitstring) < 2) {return(-Inf)}
+      centroids_used <- bit_to_cent(bitstring)
+
+      # Assume constant speed so time and distance are interchangeable
+      # Fixed service time per delivery
+      tau <- 1
+      # Punishment for unwanted centroids
+      len <- abs(no_of_centers - sum(bitstring))
+      # Computation of objective value
+      result <- centroids$distances %>%
+        # filter the centroids to use the ones included in the solution
+        dplyr::filter(`Centroid id` %in% centroids_used$`Centroid id`) %>%
+        # for each demand point show only the closest centroid
+        dplyr::group_by(`Demand point id`) %>%
+        dplyr::filter(Distance == min(Distance)) %>%
+        dplyr::ungroup() %>%
+        # join with instance$data to get the arrival rate for each demand point
+        dplyr::inner_join(
+          dplyr::select(instance$data, `Demand point id`, `Arrival rate`),
+          by = "Demand point id"
+        ) %>%
+        # calculate operation time for each centroid, as the sum of weigthed distances to demand point in the service area of the centroid
+        dplyr::group_by(`Centroid id`) %>%
+        dplyr::summarise(`Operation time` = sum(`Arrival rate` * (Distance + tau))) %>%
+        # lastly we sum over all centroids, with a penalty term that is zero if we have the specified amount of centroids
+        dplyr::summarise(OTV = var(`Operation time`) + len*1000)
+      # we return the negative TOT as we are maximizing but TOT should be minimized
+      return(-result$OTV)
     }
   }
 
