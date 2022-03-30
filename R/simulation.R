@@ -57,7 +57,7 @@ simulation <- function(
 
   get_distance <- function (x1, y1, x2, y2){
     if (dist_haversine) {
-      return((geosphere::distm(c(x1, y1), c(x2, y2), fun = geosphere::distHaversine)/1000)[1,1])
+      return((geosphere::distm(c(x1, y1), c(x2, y2), fun = geosphere::distHaversine))[1,1])
     } else {
       return(((x1-x2)^2 +(y1-y2)^2)^0.5)
     }
@@ -321,8 +321,8 @@ simulation <- function(
                  for(i in 1:nrow(movingAgents)){
                    agent_id = movingAgents$id[i]
                    # position update
-                   x_increment = (agent_list$goal_x[agent_id]- agent_list$x_now[agent_id])
-                   y_increment = (agent_list$goal_y[agent_id]- agent_list$y_now[agent_id])
+                   x_increment = (agent_list$goal_x[agent_id] - agent_list$x_now[agent_id])
+                   y_increment = (agent_list$goal_y[agent_id] - agent_list$y_now[agent_id])
                    length_to_move = (x_increment^2 + y_increment^2)^0.5
                    if(length_to_move > speed_agent){
                      angle = atan2(y_increment, x_increment)
