@@ -84,7 +84,7 @@ plot_bases(solution)
 
 ## Simulation
 
-Here it is shown how you can make a simulation based on the solution just found:
+Here it is shown how you can make a simulation based on the solution just found.
 
 ```{r simulation, cache = T}
 simulation_result <- simulation(
@@ -101,7 +101,7 @@ simulation_result <- simulation(
 )
 ```
 
-```{r distances, fig.dim=c(8,3)*1.1}
+```{r distances, fig.dim=c(8,3)}
 simulation_result$metrics[[1]]$distances %>%
   ggplot(aes(x = time, 
              y = distance,

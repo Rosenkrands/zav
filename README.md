@@ -90,7 +90,7 @@ plot_bases(solution)
 ## Simulation
 
 Here it is shown how you can make a simulation based on the solution
-just found:
+just found.
 
 ``` r
 simulation_result <- simulation(
