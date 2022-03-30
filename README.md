@@ -107,15 +107,4 @@ simulation_result <- simulation(
 )
 ```
 
-``` r
-simulation_result$metrics[[1]]$distances %>%
-  ggplot(aes(x = time, 
-             y = distance,
-             color = paste0(id1,'-',id2))) +
-  geom_line() +
-  labs(color = "Pair") +
-  theme_bw() +
-  theme(legend.position = "none")
-```
-
 <img src="man/figures/README-distances-1.png" width="100%" />

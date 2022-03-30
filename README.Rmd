@@ -101,7 +101,7 @@ simulation_result <- simulation(
 )
 ```
 
-```{r distances, fig.dim=c(8,3)}
+```{r distances, fig.dim=c(8,3), echo=F}
 simulation_result$metrics[[1]]$distances %>%
   ggplot(aes(x = time, 
              y = distance,
