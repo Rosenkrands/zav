@@ -91,7 +91,7 @@ generate_instances <- function(n = 5,
 #' @return nothing
 #' @export
 #'
-generate_solutions <- function(methods = c("km", "wkm-flexclust", "wkm-swkm", "ga-safe", "ga-tot"),
+generate_solutions <- function(methods = c("km", "wkm-flexclust", "wkm-swkm", "ga-safe", "ga-tot", "ga-otv"),
                                no_of_centers = c(5, 15)) {
   # first we make a instance directory if not already present
   if (dir.exists("solutions")) {
@@ -110,7 +110,7 @@ generate_solutions <- function(methods = c("km", "wkm-flexclust", "wkm-swkm", "g
   names(instances) <- tools::file_path_sans_ext(list.files("instances"))
 
   # precalculate centroids if we are using ga methods
-  if (("ga-safe" %in% methods) | ("ga-tot" %in% methods)) {
+  if (("ga-safe" %in% methods) | ("ga-tot" %in% methods) | ("ga-otv" %in% methods)) {
     message("Precalculating grid centroids for all instances")
 
     num_cores <- parallel::detectCores(logical = F)
@@ -172,6 +172,12 @@ generate_solutions <- function(methods = c("km", "wkm-flexclust", "wkm-swkm", "g
                            no_of_centers = param$no_of_centers,
                            obj = "SAFE",
                            miter = miter)
+    } else if (param$method == "ga-otv") {
+      solution <- solve_ga(instance = instances[[param$instance]],
+                           centroids = centroids[[param$instance]],
+                           no_of_centers = param$no_of_centers,
+                           obj = "OTV",
+                           miter = miter)
     } else {
       stop(paste0("method '", param$method, "' not implemented."))
     }
@@ -207,7 +213,8 @@ generate_solutions <- function(methods = c("km", "wkm-flexclust", "wkm-swkm", "g
       number_of_uavs = as.numeric(split_name[[1]][3]),
       TOT = TOT(solution),
       WCSS = WCSS(solution),
-      SAFE = SAFE(solution)
+      SAFE = SAFE(solution),
+      OTV = OTV(solution)
     )
   }
 
@@ -341,7 +348,9 @@ generate_simulations <- function(flight = c("zoned", "free"),
       `Minimum distance` = min(simulation$metrics[[1]]$distances$distance),
       `Mean distance` = mean(simulation$metrics[[1]]$distances$distance),
       `5th percentile distance` = stats::quantile(simulation$metrics[[1]]$distances$distance, probs = c(.05)),
-      utilization = list(utilization)
+      utilization = list(utilization),
+      response_times = list(simulation$metrics[[1]]$response_time_performance),
+      min_distances = list(simulation$metrics[[1]]$distances %>% dplyr::group_by(time) %>% dplyr::summarise(distance = min(distance)))
     )
   }
 
