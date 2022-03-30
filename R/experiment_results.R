@@ -48,7 +48,9 @@ experiment_results <- function() {
                      `Minimum distance`,
                      `Mean distance`,
                      `5th percentile distance`,
-                     utilization)
+                     utilization,
+                     response_times,
+                     min_distances)
 
   # join cleaned files together
   results <- list(
